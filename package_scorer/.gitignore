@@ -1,0 +1,14 @@
+.env
+./vscode
+*.log
+logs
+__pycache__/
+lib64
+pyvenv.cfg
+bin
+lib
+include
+working
+src/test_folder/test_module
+.coverage
+htmlcov/
