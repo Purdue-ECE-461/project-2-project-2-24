@@ -14,4 +14,4 @@ jobs:
       - name: deploy
         uses: actions/labeler@v2
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: "AIzaSyCyR6UgZLT8opbrjRSaskRTUZK08jeoA7I"
