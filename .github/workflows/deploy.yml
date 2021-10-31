@@ -1,19 +1,26 @@
 name: Deploy 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Push to Release Branch
+  deployment:
+    name: Deployment
     runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Deploy
+      - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
-          branch: releases
+          branch: releases/v4
           folder: .
           clean: false
           single-commit: true
