@@ -11,7 +11,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: deploy
-        uses: actions/labeler@v2
+      - name: Deploy to App Engine
+        id: deploy
+        uses: google-github-actions/deploy-appengine@v0.2.0
         with:
-          repo-token: "AIzaSyCyR6UgZLT8opbrjRSaskRTUZK08jeoA7I"
+          deliverables: app.yaml cron.yaml
+          version: v1
+          project_id: ${{ secrets.GCP_PROJECT }}
+          credentials: ${{ secrets.GCP_CREDENTIALS }}
