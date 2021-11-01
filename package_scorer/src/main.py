@@ -88,7 +88,7 @@ def main(): # pragma: no cover
         # Perform analysis
         cur_repo = analyze_repo(clean_url)
         
-        # Log changes and append repo to scores
+        #Log changes and append repo to scores
         logging.info("Calculated overall score for %s: %.2f" % (clean_url, cur_repo.overall_score))
         repositories.append(cur_repo)
     # ================== End of Calculations ===================
