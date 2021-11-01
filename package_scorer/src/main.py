@@ -21,7 +21,7 @@ debug_level = os.getenv("LOGGING_LEVEL")
 log_level = 0
 logging.disable = False
 
-log_level = 0 + 20*(int(debug_level == 1)) + 10*(int(debug_level == 2))
+log_level = 0 + 20 * (int(debug_level == 1)) + 10*(int(debug_level == 2))
 logging.disable = True if log_level == 0 else False
 logging.basicConfig(filename=log_file,level=log_level)
 
