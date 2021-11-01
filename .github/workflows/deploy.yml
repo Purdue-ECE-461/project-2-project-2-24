@@ -24,4 +24,3 @@ jobs:
           version: master
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
-          deliverables: app.yaml
