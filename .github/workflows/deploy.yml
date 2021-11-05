@@ -1,0 +1,27 @@
+name: Deploy 
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deployment:
+    name: Deployment
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deply to google engine
+        uses: google-github-actions/deploy-appengine@v0.4.0
+        with:
+          project_id: ${{secrets.GOOGLE_PROJECT_ID}}
+          version: master
+          credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
+          flags: --no-cache
+          deliverables: app.yaml

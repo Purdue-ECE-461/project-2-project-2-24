@@ -21,7 +21,7 @@ debug_level = os.getenv("LOGGING_LEVEL")
 log_level = 0
 logging.disable = False
 
-log_level = 0 + 20*(int(debug_level == 1)) + 10*(int(debug_level == 2))
+log_level = 0 + 20 * (int(debug_level == 1)) + 10*(int(debug_level == 2))
 logging.disable = True if log_level == 0 else False
 logging.basicConfig(filename=log_file,level=log_level)
 
@@ -88,7 +88,7 @@ def main(): # pragma: no cover
         # Perform analysis
         cur_repo = analyze_repo(clean_url)
         
-        # Log changes and append repo to scores
+        #Log changes and append repo to scores
         logging.info("Calculated overall score for %s: %.2f" % (clean_url, cur_repo.overall_score))
         repositories.append(cur_repo)
     # ================== End of Calculations ===================
