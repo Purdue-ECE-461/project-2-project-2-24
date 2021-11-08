@@ -1,0 +1,660 @@
+openapi: 3.0.2
+info:
+  contact:
+    email: davisjam@purdue.edu
+    name: Prof. Davis
+    url: http://davisjam.github.io
+  description: 'API for ECE 461/Fall 2021/Project 2: A Trustworthy Module Registry'
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: ECE 461 - Fall 2021 - Project 2
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /authenticate:
+    description: |-
+      If your system supports the authentication scheme described in the spec, then:
+
+      1. The obtained token should be provided to the other endpoints via the "X-Authorization" header.
+      2. The "Authorization" header is *required* in your system.
+
+      Otherwise, this endpoint should return HTTP 501 "Not implemented", and the "X-Authorization" header should be unused for the other endpoints.
+    put:
+      operationId: create_auth_token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationToken'
+          description: Success.
+        "401":
+          description: Authentication failed (e.g. no such user or invalid password)
+        "501":
+          description: This system does not support authentication.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Authenticate this user -- get an access token.
+  /package:
+    description: The "ID" field in the request body allows the user to use their own
+      ID scheme. If this ID is already in use, the system chooses a new ID and indicates
+      this in the response body.
+    post:
+      operationId: package_create
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageMetadata'
+          description: Success. Check the ID in the returned metadata for the official
+            ID.
+        "403":
+          description: Package exists already.
+        "400":
+          description: Malformed request.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Create a version of a package
+  /package/byName/{name}:
+    delete:
+      operationId: package_by_name_delete
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageName'
+        style: simple
+      responses:
+        "200":
+          description: Package is deleted.
+        "400":
+          description: No such package.
+      summary: Delete all versions of this package.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    get:
+      description: Return the history of this package (all versions).
+      operationId: package_by_name_get
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageName'
+        style: simple
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: unexpected error
+        "200":
+          content:
+            application/json:
+              examples:
+                zaza:
+                  value:
+                    id: 1
+                    name: Zaza
+                    tag: cat
+              schema:
+                items:
+                  $ref: '#/components/schemas/PackageHistoryEntry'
+                type: array
+          description: Package history
+        "400":
+          description: No such package.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Interact with the package with this name
+  /package/{id}:
+    delete:
+      operationId: package_delete
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      - description: Package ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageID'
+        style: simple
+      responses:
+        "200":
+          description: Package is deleted.
+        "400":
+          description: No such package.
+      summary: Delete this version of the package.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    get:
+      description: Return this package.
+      operationId: package_retrieve
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      - description: ID of package to fetch
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageID'
+        style: simple
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: unexpected error
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+          description: pet response
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    put:
+      description: |-
+        The name, version, and ID must match.
+
+        The package contents (from PackageData) will replace the previous contents.
+      operationId: package_update
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageID'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+        required: true
+      responses:
+        "200":
+          description: Success.
+        "400":
+          description: Malformed request (e.g. no such package).
+      summary: Update this version of the package.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Interact with the package with this ID
+  /package/{id}/rate:
+    get:
+      operationId: package_rate
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PackageID'
+        style: simple
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageRating'
+          description: Rating. Only use this if each metric was computed successfully.
+        "400":
+          description: No such package.
+        "500":
+          description: The package rating system choked on at least one of the metrics.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Get the rating for this package.
+  /packages:
+    description: |-
+      Search for packages satisfying the indicated query.
+
+      If you want to enumerate all packages, provide an array with a single PackageQuery whose name is "*".
+
+      The response is paginated; the response header includes the offset to use in the next query.
+    get:
+      description: Get any packages fitting the query.
+      operationId: packages_list
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      - description: Provide this for pagination. If not provided, returns the first
+          page of results.
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          $ref: '#/components/schemas/EnumerateOffset'
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/PackageQuery'
+              type: array
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: unexpected error
+        "200":
+          content:
+            application/json:
+              examples:
+                laurent_cats:
+                  value:
+                  - id: 1
+                    name: Zaza
+                    tag: cat
+                  - id: 2
+                    name: Tigresse
+                    tag: cat
+                  - id: 3
+                    name: Maki
+                    tag: cat
+                  - id: 4
+                    name: Toufik
+                    tag: cat
+              schema:
+                items:
+                  $ref: '#/components/schemas/PackageMetadata'
+                type: array
+          description: List of packages
+          headers:
+            offset:
+              explode: false
+              schema:
+                $ref: '#/components/schemas/EnumerateOffset'
+              style: simple
+      summary: Get packages
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Query the registry.
+  /reset:
+    delete:
+      operationId: registry_reset
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: false
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      responses:
+        "200":
+          description: Registry is reset.
+        "401":
+          description: You do not have permission to reset the registry.
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    summary: Reset registry
+components:
+  schemas:
+    Error:
+      properties:
+        code:
+          format: int32
+          title: code
+          type: integer
+        message:
+          title: message
+          type: string
+      required:
+      - code
+      - message
+      title: Error
+    Package:
+      example:
+        metadata:
+          Version: 1.2.3
+          ID: ID
+          Name: Name
+        data:
+          Content: Content
+          JSProgram: JSProgram
+          URL: URL
+      properties:
+        metadata:
+          $ref: '#/components/schemas/PackageMetadata'
+        data:
+          $ref: '#/components/schemas/PackageData'
+      required:
+      - data
+      - metadata
+      title: Package
+      type: object
+    PackageMetadata:
+      description: |-
+        The "Name" and "Version" are used as a unique identifier pair when uploading a package.
+
+        The "ID" is used as an internal identifier for interacting with existing packages.
+      example:
+        Version: 1.2.3
+        ID: ID
+        Name: Name
+      properties:
+        Name:
+          description: |-
+            Name of a package.
+
+            - Names should only use typical "keyboard" characters.
+            - The name "*" is reserved. See the `/packages` API for its meaning.
+          title: PackageName
+          type: string
+        Version:
+          description: Package version
+          example: 1.2.3
+          title: Version
+          type: string
+        ID:
+          title: PackageID
+          type: string
+      required:
+      - ID
+      - Name
+      - Version
+      title: PackageMetadata
+      type: object
+    PackageData:
+      description: |-
+        This is a "union" type.
+        - On package upload, either Content or URL should be set.
+        - On package update, exactly one field should be set.
+        - On download, the Content field should be set.
+      example:
+        Content: Content
+        JSProgram: JSProgram
+        URL: URL
+      properties:
+        Content:
+          description: |-
+            Package contents. This is the zip file uploaded by the user. (Encoded as text using a Base64 encoding).
+
+            This will be a zipped version of an npm package's GitHub repository, minus the ".git/" directory." It will, for example, include the "package.json" file that can be used to retrieve the project homepage.
+
+            See https://docs.npmjs.com/cli/v7/configuring-npm/package-json#homepage.
+          title: Content
+          type: string
+        URL:
+          description: Package URL (for use in public ingest).
+          title: URL
+          type: string
+        JSProgram:
+          description: A JavaScript program (for use with sensitive modules).
+          title: JSProgram
+          type: string
+      title: PackageData
+      type: object
+    User:
+      example:
+        name: Alfalfa
+        isAdmin: true
+      properties:
+        name:
+          example: Alfalfa
+          title: name
+          type: string
+        isAdmin:
+          description: Is this user an admin?
+          title: isAdmin
+          type: boolean
+      required:
+      - isAdmin
+      - name
+      title: User
+      type: object
+    UserAuthenticationInfo:
+      description: Authentication info for a user
+      example:
+        password: password
+      properties:
+        password:
+          description: Password for a user. Per the spec, this should be a "strong"
+            password.
+          title: password
+          type: string
+      required:
+      - password
+      title: UserAuthenticationInfo
+      type: object
+    PackageID:
+      title: PackageID
+      type: string
+    PackageRating:
+      description: |-
+        Package rating (cf. Project 1).
+
+        If the Project 1 that you inherited does not support one or more of the original properties, denote this with the value "-1".
+      example:
+        GoodPinningPractice: 2.3021358869347655
+        ResponsiveMaintainer: 5.962133916683182
+        LicenseScore: 5.637376656633329
+        RampUp: 1.4658129805029452
+        BusFactor: 0.8008281904610115
+        Correctness: 6.027456183070403
+      properties:
+        BusFactor:
+          format: double
+          title: BusFactor
+          type: number
+        Correctness:
+          format: double
+          title: Correctness
+          type: number
+        RampUp:
+          format: double
+          title: RampUp
+          type: number
+        ResponsiveMaintainer:
+          format: double
+          title: ResponsiveMaintainer
+          type: number
+        LicenseScore:
+          format: double
+          title: LicenseScore
+          type: number
+        GoodPinningPractice:
+          description: The fraction of its dependencies that are pinned to at least
+            a specific major+minor version, e.g. version 2.3.X of a package. (If there
+            are zero dependencies, they should receive a 1.0 rating. If there are
+            two dependencies, one pinned to this degree, then they should receive
+            a ½ = 0.5 rating).
+          format: double
+          title: GoodPinningPractice
+          type: number
+      required:
+      - BusFactor
+      - Correctness
+      - GoodPinningPractice
+      - LicenseScore
+      - RampUp
+      - ResponsiveMaintainer
+      title: PackageRating
+      type: object
+    PackageHistoryEntry:
+      description: One entry of the history of this package.
+      example:
+        Action: CREATE
+        User:
+          name: Alfalfa
+          isAdmin: true
+        PackageMetadata:
+          Version: 1.2.3
+          ID: ID
+          Name: Name
+        Date: 2000-01-23T04:56:07.000+00:00
+      properties:
+        User:
+          $ref: '#/components/schemas/User'
+        Date:
+          description: Date of activity.
+          format: date-time
+          title: Date
+          type: string
+        PackageMetadata:
+          $ref: '#/components/schemas/PackageMetadata'
+        Action:
+          enum:
+          - CREATE
+          - UPDATE
+          - DOWNLOAD
+          - RATE
+          title: Action
+          type: string
+      required:
+      - Action
+      - Date
+      - PackageMetadata
+      - User
+      title: PackageHistoryEntry
+      type: object
+    PackageName:
+      description: |-
+        Name of a package.
+
+        - Names should only use typical "keyboard" characters.
+        - The name "*" is reserved. See the `/packages` API for its meaning.
+      title: PackageName
+      type: string
+    AuthenticationToken:
+      description: 'The spec permits you to use any token format you like. You could,
+        for example, look into JSON Web Tokens ("JWT", pronounced "jots"): https://jwt.io.'
+      type: string
+    AuthenticationRequest:
+      example:
+        Secret:
+          password: password
+        User:
+          name: Alfalfa
+          isAdmin: true
+      properties:
+        User:
+          $ref: '#/components/schemas/User'
+        Secret:
+          $ref: '#/components/schemas/UserAuthenticationInfo'
+      required:
+      - Secret
+      - User
+      type: object
+    SemverRange:
+      example: |-
+        Exact (1.2.3)
+        Bounded range (1.2.3-2.1.0)
+        Carat (^1.2.3)
+        Tilde (~1.2.0)
+      title: Version
+      type: string
+    PackageQuery:
+      example:
+        Version: |-
+          Exact (1.2.3)
+          Bounded range (1.2.3-2.1.0)
+          Carat (^1.2.3)
+          Tilde (~1.2.0)
+        Name: Name
+      properties:
+        Version:
+          example: |-
+            Exact (1.2.3)
+            Bounded range (1.2.3-2.1.0)
+            Carat (^1.2.3)
+            Tilde (~1.2.0)
+          title: Version
+          type: string
+        Name:
+          description: |-
+            Name of a package.
+
+            - Names should only use typical "keyboard" characters.
+            - The name "*" is reserved. See the `/packages` API for its meaning.
+          title: PackageName
+          type: string
+      required:
+      - Name
+      title: PackageQuery
+      type: object
+    EnumerateOffset:
+      description: Offset in pagination.
+      example: "1"
+      type: string
+  securitySchemes:
+    UserAndPasswordYieldsToken:
+      description: Use the /authentication endpoint to obtain an authorization token.
+      in: header
+      name: X-Authorization
+      type: apiKey
+      x-apikeyInfoFunc: openapi_server.controllers.security_controller_.info_from_UserAndPasswordYieldsToken
