@@ -1,8 +1,5 @@
 name: Deploy 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -21,7 +18,7 @@ jobs:
         uses: google-github-actions/deploy-appengine@v0.4.0
         with:
           project_id: ${{secrets.GOOGLE_PROJECT_ID}}
-          version: master
+          version: dev
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
           deliverables: app.yaml
