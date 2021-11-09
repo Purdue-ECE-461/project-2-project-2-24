@@ -1,9 +1,12 @@
-from google.cloud import bigquery
-
 class Database():
     def __init__(self):
         # Initialize client
         self.client = bigquery.Client(project="ece-461-proj-2-24")
+
+        # Get tables
+        
+
+    
 
     def test_query(self):
         query = """
