@@ -62,6 +62,23 @@ class Database():
 
     def gen_new_id(self, table):
         # TODO: Find lowest available positive integer ID in given table and return it
+        query = f"""
+            SELECT  id + 1
+            FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset}.{table} to
+            WHERE   NOT EXISTS
+                    (
+                    SELECT  NULL
+                    FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset}.{table} ti 
+                    WHERE   ti.id = to.id + 1
+                    )
+            ORDER BY
+                    id
+            LIMIT 1
+        """
+
+        # TODO: Parse results and return new id
+        results = self.execute_query(query)
+
         return 5
 
     
