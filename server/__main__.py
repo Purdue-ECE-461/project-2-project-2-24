@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import connexion
+import encoder
 from dotenv import load_dotenv
-from openapi_server import encoder
 
 def main():
     load_dotenv()

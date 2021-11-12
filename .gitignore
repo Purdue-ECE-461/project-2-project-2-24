@@ -67,3 +67,6 @@ target/
 
 # .JAR files
 *.jar
+
+# Environment variables
+*.env
