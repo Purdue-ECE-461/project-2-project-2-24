@@ -11,12 +11,12 @@ if [ $1 == "-help" ]; then
     echo "Use 'install' to install, 'test' to run tests, or 'clean' to clean install"
 elif [ $1 == "install" ]; then
     python -m venv venv
-    source ./bin/activate
+    source venv/bin/activate
     pip install --upgrade pip
     pip install -e ./openapi_server
     deactivate
 elif [[ $1 == "test" ]]; then
-    source ./bin/activate
+    source venv/bin/activate
     > test_output.txt
     coverage run -m pytest test.py >> test_output.txt
     coverage report -m >> test_output.txt
