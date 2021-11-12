@@ -1,3 +1,3 @@
 from google.cloud import bigquery
-from ..models import *
+from models import Package
 import os
