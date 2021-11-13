@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import datetime
 
 import six
 import typing
-import typing_utils
+import openapi_server.typing_utils
 
 
 def _deserialize(data, klass):

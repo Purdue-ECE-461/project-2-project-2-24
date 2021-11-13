@@ -1,10 +1,11 @@
 from __future__ import absolute_import
-from database import Database
+from openapi_server.database import database
+from openapi_server.models import *
 from dotenv import load_dotenv
 
 
 load_dotenv()
-db = Database()
+db = database.Database()
 
 user = User(name="Aiden", is_admin=False)
 package =  Package(

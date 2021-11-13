@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Test Database",
             "type": "python",
+            "python": "${workspaceFolder}/server/venv/Scripts/python.exe",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/server/openapi_server/test/test_database.py",
             "console": "integratedTerminal"
         }
     ]
