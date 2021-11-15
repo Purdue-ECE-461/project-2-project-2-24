@@ -3,7 +3,7 @@ import datetime
 
 import six
 import typing
-import openapi_server.typing_utils
+import typing_utils
 
 
 def _deserialize(data, klass):

@@ -1,20 +1,24 @@
 from __future__ import absolute_import
 from google.cloud import bigquery
-from openapi_server.models import Package
+from models import *
 import os
 
 class Database():
     def __init__(self):
-        # TODO make this resilient to missing environment variables
         # Initialize client
-        self.client = bigquery.Client(project=os.environ["GOOGLE_CLOUD_PROJECT"])
+        try:
+            self.client = bigquery.Client(project=os.environ["GOOGLE_CLOUD_PROJECT"])
 
-        # Get dataset
-        self.dataset = self.client.get_dataset(os.environ["BIGQUERY_DATASET"])
+            # Get dataset
+            self.dataset = self.client.get_dataset(os.environ["BIGQUERY_DATASET"])
 
-        # Get tables
-        self.tables = self.client.list_tables(self.dataset)
-    
+            # Get tables
+            self.tables = self.client.list_tables(self.dataset)
+        except KeyError as err:
+            print("Cannot initialize Database!!!")
+            print(err)
+            exit(1)
+
 
     # Params: 
     # user: models/User
@@ -27,8 +31,7 @@ class Database():
         name = metadata.name
         version = metadata.version
         if self.package_exists(name, version):
-            # TODO: Return error saying package already exists, use package update to change existing package
-            return "some error"
+            return Error(code=403, message="Package-Version already exists, use 'Update' instead!")
 
         # Get id
         id = metadata.id
@@ -41,29 +44,75 @@ class Database():
         url = data.url
         if content is None and url is None:
             # TODO: Return error saying missing content or URL
-            return "some error"
-
-        # TODO: Implement sensitive and secret flags
-        sensitive = False
-        secret = True
-        
-        # Get js_program
-        js_program = data.js_program
-        # TODO: Trigger separate query to insert js program first, then add the ID to the package upload
+            if content is None:
+                return Error(code=400, message="Missing package content for upload!")
+            else:
+                return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
         #upload_user_id = self.get_user_id(user.name)'
         upload_user_id = 1
 
+        # TODO: Implement sensitive and secret flags
+        sensitive = False
+        secret = True
+        
+        query = None
+        if sensitive:
+            # Get js_program
+            js_program = data.js_program
+            if js_program is not None:
+                js_program_id = self.upload_js_program(id, js_program)
+                # TODO: Trigger separate query to insert js program first, then add the ID to the package upload
+
+            # Generate query
+            query = f"""
+                INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+                VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+            """
+
+        results = self.execute_query(query)
+
+        return None
+
+
+    def upload_js_program(self, package_id, js_program):
+        # Get new script id
+        id = self.gen_new_id("scripts")
+
         # Generate query
         query = f"""
-            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts (id, package_id, script)
+            VALUES ({id}, {package_id}, "{js_program}")
+        """
+
+        # Execute query
+        results = self.execute_query(query)
+
+        return results
+
+
+    def create_new_user(self, user, new_user, password, user_group):
+        # Is user allowed to create a new user?
+        if (not user.is_admin):
+            # TODO: Return error here that user is not allowed to make new users
+            return 0
+        
+        # Generate id for new user
+        new_user_id = self.gen_new_id("users")
+
+        # Get user group id
+        user_group_id = self.get_user_group_id(user_group)
+
+        # Generate query
+        query = f"""
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, name, url, version, sensitive, secret, upload_user_id, zip)
             VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
         """
 
         results = self.execute_query(query)
 
-        return None
+        return results
 
 
     def gen_new_id(self, table):
@@ -88,6 +137,16 @@ class Database():
         new_id = results
 
         return new_id
+
+
+    def get_user_group_id(self, group_name):
+        # Generate query
+        query = f"""
+            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups WHERE name = "{group_name}"
+        """
+        results = self.execute_query(query)
+        # TODO: Get id from query, if it exists
+        return 1
 
     
     def get_user_id(self, name):
