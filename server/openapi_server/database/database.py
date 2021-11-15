@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from re import L
 from google.cloud import bigquery
 from models import *
 import os
@@ -43,18 +44,20 @@ class Database():
         content = data.content
         url = data.url
         if content is None and url is None:
-            # TODO: Return error saying missing content or URL
             if content is None:
                 return Error(code=400, message="Missing package content for upload!")
             else:
                 return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
-        #upload_user_id = self.get_user_id(user.name)'
-        upload_user_id = 1
+        upload_user_id = self.get_user_id(user.name)
+        # TODO: CHECK AND REMOVE THIS
+        upload_user_id=7
+        if upload_user_id is None:
+            return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
-        sensitive = False
+        sensitive = True
         secret = True
         
         query = None
@@ -62,14 +65,14 @@ class Database():
             # Get js_program
             js_program = data.js_program
             if js_program is not None:
-                js_program_id = self.upload_js_program(id, js_program)
-                # TODO: Trigger separate query to insert js program first, then add the ID to the package upload
+                self.upload_js_program(id, js_program)
 
-            # Generate query
-            query = f"""
-                INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
-            """
+        # Generate query
+        query = f"""
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+            VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+        """
+
 
         results = self.execute_query(query)
 
@@ -89,7 +92,7 @@ class Database():
         # Execute query
         results = self.execute_query(query)
 
-        return results
+        return id
 
 
     def create_new_user(self, user, new_user, password, user_group):
@@ -119,12 +122,12 @@ class Database():
         # TODO: Find lowest available positive integer ID in given table and return it
         query = f"""
             SELECT  id + 1
-            FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} to
+            FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} tableo
             WHERE   NOT EXISTS
                     (
                     SELECT  NULL
-                    FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} ti 
-                    WHERE   ti.id = to.id + 1
+                    FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} tablei 
+                    WHERE   tablei.id = tableo.id + 1
                     )
             ORDER BY
                     id
@@ -134,9 +137,11 @@ class Database():
         # TODO: Parse results and return new id
         results = self.execute_query(query)
 
-        new_id = results
-
-        return new_id
+        if (len(results) == 0):
+            return 1
+        else:
+            # TODO CHECK THIS
+            return results[0].get("id")
 
 
     def get_user_group_id(self, group_name):
@@ -152,12 +157,15 @@ class Database():
     def get_user_id(self, name):
         # Generate query
         query = f"""
-            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users WHERE name = "{name}"
+            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users WHERE username = "{name}"
         """
 
         results = self.execute_query(query)
-        # TODO: Get id from query, if it exists
-        return 1
+
+        if (len(results) > 0):
+            return results[0].get("id")
+        else:
+            return None
 
     
     def id_exists(self, table, id):
@@ -167,8 +175,8 @@ class Database():
         """
 
         results = self.execute_query(query)
-        # TODO: Check results to see if any records are returned
-        return False
+
+        return (len(results) > 0)
 
     
     def package_exists(self, name, version):
@@ -179,15 +187,18 @@ class Database():
 
         results = self.execute_query(query)
 
-        # TODO: Check results to see if any records are returned
-        return False
+        return (len(results) > 0)
 
 
     def execute_query(self, query):
+        print("QUERY:")
+        print(query)
         query_job = self.client.query(query)
 
+        results = list(query_job.result())
+
         print("QUERY RESPONSE:")
-        for row in query_job:
+        for row in results:
             print(row)
 
-        return query_job
+        return results

@@ -17,5 +17,8 @@ package =  Package(
 def test_upload_package():
     db.upload_package(user=user, package=package)
 
-def test_create_new_user():
+def test_create_new_user(user):
     db.create_new_user(user=user, new_user=user)
+
+if __name__ == "__main__":
+    test_upload_package()
