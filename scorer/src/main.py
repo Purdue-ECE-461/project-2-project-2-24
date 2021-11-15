@@ -7,6 +7,10 @@ from dotenv import load_dotenv # pragma: no cover
 import shutil # pragma: no cover
 import repoMetrics # pragma: no cover
 import coverage # pragma: no cover
+import json  
+import zipfile
+import pandas as pd
+import base64
 
 #import June's code here
 from metric_helper import metric_helper # pragma: no cover
@@ -25,8 +29,27 @@ log_level = 0 + 20 * (int(debug_level == 1)) + 10*(int(debug_level == 2))
 logging.disable = True if log_level == 0 else False
 logging.basicConfig(filename=log_file,level=log_level)
 
-def analyze_repo(url):
-        # Configure current current Repository Object
+def analyze_repo(url, z):
+        dependency_list={}
+        dep_flag = False
+        for filename in z.namelist():
+            if not os.path.isdir(filename):
+                for line in z.open(filename):                    
+                    if dep_flag is True:
+                        if "}" in str(line):
+                            pass
+                        else:
+                            result = str(line, 'utf-8')
+                            dependency = result.rstrip().split(',')[0].split(' ')[4].strip('\"').rstrip(':').rstrip('"')
+                            version = result.rstrip().split(',')[0].split(' ')[5].strip('\"')
+                            dependency_list.update({dependency:version})                             
+                    if "dependencies" in str(line):
+                        dep_flag = True
+                    if dep_flag is True and "}" in str(line):
+                        dep_flag = False      
+                z.close()
+        del z 
+        
         cur_repo = repoMetrics.Repository()
         tmp_dir = tempfile.TemporaryDirectory()
         cur_repo.dir = tmp_dir
@@ -37,25 +60,25 @@ def analyze_repo(url):
 
         # TODO: Handle error where working exists already
         if os.path.isdir('working'):
-            logging.error('Working directory left over, deleting...')
+            #logging.error('Working directory left over, deleting...')
             try: shutil.rmtree('working')
             except OSError: 
-                logging.error('Could not delete working directory!!')
+                #logging.error('Could not delete working directory!!')
                 return 23
 
         # TODO: Get repo url from June's function, for now just going to clone directly
         clean_url = url_handler.get_github_url(url)
-        logging.debug("Repository url found, using %s" % (clean_url))
+        #logging.debug("Repository url found, using %s" % (clean_url))
         git.Repo.clone_from(clean_url, cur_repo.dir.name)
-        logging.debug("Repository cloned!")
+        #logging.debug("Repository cloned!")
 
         met_help = metric_helper()
         met_help.get_api_stuff(token, clean_url, cur_repo.dir.name)
         cur_repo.met_help = met_help
 
         # TODO: calculate individual metrics, for now setting random
-        logging.debug("Calculating individual metric scores...")
-        cur_repo.calc_metrics()
+        #logging.debug("Calculating individual metric scores...")
+        cur_repo.calc_metrics(dependency_list)
         
         # Calculate overall score and clean up the working file
         cur_repo.calc_overall()
@@ -79,27 +102,25 @@ def main(): # pragma: no cover
 
     # ================== Start of Calculations ==================
     repositories = []
-    url_file = open(sys.argv[1],'r')
-    for url in url_file:
-        clean_url = url.strip() #NEEDED OR ELSE CLONE BREAKS!
-        logging.info("Working on %s url..." % (clean_url))
-        clean_url = url_handler.get_github_url(clean_url)
+    z = zipfile.ZipFile(sys.argv[1]) 
 
-        # Perform analysis
-        cur_repo = analyze_repo(clean_url)
-        
-        #Log changes and append repo to scores
-        logging.info("Calculated overall score for %s: %.2f" % (clean_url, cur_repo.overall_score))
-        repositories.append(cur_repo)
-    # ================== End of Calculations ===================
-
-
-    # ================= PRINT FORMATTED OUTPUT =================
+    for filename in z.namelist():
+        if not os.path.isdir(filename):
+            for line in z.open(filename):
+                if "homepage" in str(line):
+                    result = str(line, 'utf-8')
+                    result = result.rstrip().split(',')[0].split(' ')[3].strip('\"')
+                    clean_url = result.strip()
+                    clean_url = url_handler.get_github_url(clean_url)
+                    cur_repo = analyze_repo(clean_url, z)
+                    repositories.append(cur_repo)
+            z.close()                
+    del z                            
+            
     repositories.sort(key=lambda x: x.overall_score, reverse=True)
-    print("URL NET_SCORE RAMP_UP_SCORE CORRECTNESS_SCORE BUS_FACTOR_SCORE RESPONSIVE_MAINTAINER_SCORE LICENSE_SCORE")
+    print("URL NET_SCORE RAMP_UP_SCORE CORRECTNESS_SCORE BUS_FACTOR_SCORE RESPONSIVE_MAINTAINER_SCORE LICENSE_SCORE FRACTION_DEPENDENCY")
     for repo in repositories:
         repo.print_metrics()
-        #repo.validate_scores()
 
 if __name__ == "__main__":
     main() # pragma: no cover
