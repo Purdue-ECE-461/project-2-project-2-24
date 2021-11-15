@@ -1,3 +1,0 @@
--r baseline_openapi_server/requirements.txt
-Flask
-flask-restful
