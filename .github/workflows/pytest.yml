@@ -17,7 +17,15 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
-      - name: pytest     
+      - name: Test Server
         uses: cclauss/GitHub-Action-for-pytest@master
         with:
-          args: pytest -h
+          args: pytest server
+      - name: Test Scorer
+        uses: cclauss/GitHub-Action-for-pytest@master
+        with:
+          args: pytest scorer
+      - name: Test Frontend
+        uses: cclauss/GitHub-Action-for-pytest@master
+        with:
+          args: pytest frontend
