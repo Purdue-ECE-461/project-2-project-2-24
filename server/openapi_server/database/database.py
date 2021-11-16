@@ -37,8 +37,8 @@ class Database():
         # Get id
         id = metadata.id
         if id is None or self.id_exists("packages", id):
-            # TODO: Include new id in response body
             id = self.gen_new_id("packages")
+            metadata.id = id
         
         # Content or URL or both should be set for upload
         content = data.content
@@ -75,8 +75,10 @@ class Database():
 
 
         results = self.execute_query(query)
+        
+        # TODO: Ensure upload was successful.  If it was, return metadata, if not, return an error
 
-        return None
+        return metadata
 
 
     def upload_js_program(self, package_id, js_program):
@@ -86,7 +88,7 @@ class Database():
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts (id, package_id, script)
-            VALUES ({id}, {package_id}, "{js_program}")
+            VALUES ({id}, {package_id}, "{js_program.encode("unicode_escape").decode("utf-8")}")
         """
 
         # Execute query
@@ -141,7 +143,9 @@ class Database():
             return 1
         else:
             # TODO CHECK THIS
-            return results[0].get("id")
+            #return results[0].get("id")
+            # TODO FIX THIS
+            return 8
 
 
     def get_user_group_id(self, group_name):

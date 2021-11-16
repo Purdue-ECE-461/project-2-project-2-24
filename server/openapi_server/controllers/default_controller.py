@@ -8,8 +8,11 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry  # n
 from openapi_server.models.package_metadata import PackageMetadata  # noqa: E501
 from openapi_server.models.package_query import PackageQuery  # noqa: E501
 from openapi_server.models.package_rating import PackageRating  # noqa: E501
+from openapi_server.models.user import User # noqa: E501
 from openapi_server import util
+from openapi_server.database import database
 
+db = database.Database()
 
 def create_auth_token(authentication_request):  # noqa: E501
     """create_auth_token
@@ -56,7 +59,7 @@ def package_by_name_get(name, x_authorization=None):  # noqa: E501
     return 'do some magic!'
 
 
-def package_create(x_authorization, package):  # noqa: E501
+def package_create(package, x_authorization=None):  # noqa: E501
     """package_create
 
      # noqa: E501
@@ -70,8 +73,12 @@ def package_create(x_authorization, package):  # noqa: E501
     """
     if connexion.request.is_json:
         package = Package.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
 
+    # TODO: Get user from x_authorization
+    user = User(name="Aiden", is_admin=True)
+
+    return db.upload_package(user=user, package=package)
+    
 
 def package_delete(id, x_authorization=None):  # noqa: E501
     """Delete this version of the package.
