@@ -13,19 +13,21 @@ elif [ $1 == "install" ]; then
     python3 -m venv server/venv
     source server/venv/bin/activate
     pip3 install --upgrade pip
-    pip3 install -e ./server/openapi_server
+    pip3 install -e server
+    pip3 install pytest
+    pip3 install coverage
     deactivate
 elif [[ $1 == "test" ]]; then
     source server/venv/bin/activate
     > server/test_output.txt
-    source server/.env
-    coverage run -m pytest server/openapi_server/test/test_database.py >> test_output.txt
-    coverage report -m >> test_output.txt
+    source server/src/openapi_server/.env
+    PYTHONPATH=server/src coverage run -m pytest server/tests >> server/test_output.txt
+    coverage report -m >> server/test_output.txt
     deactivate
 elif [[ $1 == "clean" ]]; then
     echo "Cleaning install..."
-    rm -r server/openapi_server/__pycache__
-    rm -r server/openapi_server/.pytest_cache
+    rm -r server/src/openapi_server/__pycache__
+    rm -r server/.pytest_cache
     rm -r server/venv
 else
     echo "Invalid command line argument"
