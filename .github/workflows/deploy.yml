@@ -21,4 +21,4 @@ jobs:
           version: dev
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
-          deliverables: app.yaml
+          deliverables: server/app.yaml
