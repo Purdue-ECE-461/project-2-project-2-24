@@ -3,12 +3,10 @@ runtime: python39
 instance_class: F2
 
 env_variables:
-  BUCKET_NAME: "example-gcs-bucket"
+  GOOGLE_CLOUD_PROJECT: ece-461-proj-2-24
+  BIGQUERY_DATASET: module_registry
 
 handlers:
-- url: /images
-  static_dir: static/images
-
 - url: /.*
   secure: always
   redirect_http_response_code: 301
