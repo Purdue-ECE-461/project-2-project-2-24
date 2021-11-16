@@ -2,12 +2,8 @@ runtime: python39
 
 instance_class: F2
 
+entrypoint: python3 -m openapi_server
+
 env_variables:
   GOOGLE_CLOUD_PROJECT: ece-461-proj-2-24
   BIGQUERY_DATASET: module_registry
-
-handlers:
-- url: /.*
-  secure: always
-  redirect_http_response_code: 301
-  script: auto

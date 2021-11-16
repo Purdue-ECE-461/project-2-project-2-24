@@ -8,7 +8,17 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry  # n
 from openapi_server.models.package_metadata import PackageMetadata  # noqa: E501
 from openapi_server.models.package_query import PackageQuery  # noqa: E501
 from openapi_server.models.package_rating import PackageRating  # noqa: E501
+from openapi_server.models.user import User # noqa: E501
 from openapi_server import util
+from openapi_server.database import database
+
+from flask import request
+
+db = database.Database()
+
+
+def get_x_authorization_token():
+    return dict(request.headers)["X-Authorization"].split()[-1]
 
 
 def create_auth_token(authentication_request):  # noqa: E501
@@ -56,7 +66,7 @@ def package_by_name_get(name, x_authorization=None):  # noqa: E501
     return 'do some magic!'
 
 
-def package_create(x_authorization, package):  # noqa: E501
+def package_create(package, x_authorization=None):  # noqa: E501
     """package_create
 
      # noqa: E501
@@ -70,8 +80,11 @@ def package_create(x_authorization, package):  # noqa: E501
     """
     if connexion.request.is_json:
         package = Package.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
 
+    x_authorization_token = get_x_authorization_token()
+
+    return db.upload_package(token=x_authorization_token, package=package)
+    
 
 def package_delete(id, x_authorization=None):  # noqa: E501
     """Delete this version of the package.
