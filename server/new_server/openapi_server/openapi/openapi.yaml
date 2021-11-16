@@ -10,7 +10,7 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: ECE 461 - Fall 2021 - Project 2
-  version: 1.0.0
+  version: 2.0.0
 servers:
 - url: /
 paths:
@@ -277,7 +277,7 @@ paths:
       If you want to enumerate all packages, provide an array with a single PackageQuery whose name is "*".
 
       The response is paginated; the response header includes the offset to use in the next query.
-    get:
+    post:
       description: Get any packages fitting the query.
       operationId: packages_list
       parameters:

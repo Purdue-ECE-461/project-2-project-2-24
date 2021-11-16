@@ -14,19 +14,9 @@ VERSION = "1.0.0"
 # http://pypi.python.org/pypi/setuptools
 
 REQUIRES = [
-    "python-dotenv",
-    "connexion[swagger-ui] >= 2.6.0",
-    "werkzeug == 0.16.1",
-    "swagger-ui-bundle >= 0.0.2",
-    "python_dateutil >= 2.6.0",
-    "setuptools >= 21.0.0",
-    "Flask == 1.1.2",
-    "google-cloud-bigquery",
-    "pytest~=4.6.7", # needed for python 2.7+3.4
-    "pytest-cov>=2.8.1",
-    "pytest-randomly==1.2.3", # needed for python 2.7+3.4
-    "Flask-Testing==0.8.0",
-    "coverage"
+    "connexion>=2.0.2",
+    "swagger-ui-bundle>=0.0.2",
+    "python_dateutil>=2.6.0"
 ]
 
 setup(

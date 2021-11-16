@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from re import L
 from google.cloud import bigquery
-from models import *
+from openapi_server.models import *
 import os
 
 class Database():

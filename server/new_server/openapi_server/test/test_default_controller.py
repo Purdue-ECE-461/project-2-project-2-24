@@ -192,7 +192,7 @@ class TestDefaultController(BaseTestCase):
         }
         response = self.client.open(
             '/packages',
-            method='GET',
+            method='POST',
             headers=headers,
             data=json.dumps(package_query),
             content_type='application/json',
