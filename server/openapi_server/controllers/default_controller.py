@@ -12,7 +12,14 @@ from openapi_server.models.user import User # noqa: E501
 from openapi_server import util
 from openapi_server.database import database
 
+from flask import request
+
 db = database.Database()
+
+
+def get_x_authorization_token():
+    return dict(request.headers)["X-Authorization"].split()[-1]
+
 
 def create_auth_token(authentication_request):  # noqa: E501
     """create_auth_token
@@ -74,10 +81,9 @@ def package_create(package, x_authorization=None):  # noqa: E501
     if connexion.request.is_json:
         package = Package.from_dict(connexion.request.get_json())  # noqa: E501
 
-    # TODO: Get user from x_authorization
-    user = User(name="Aiden", is_admin=True)
+    x_authorization_token = get_x_authorization_token()
 
-    return db.upload_package(user=user, package=package)
+    return db.upload_package(token=x_authorization_token, package=package)
     
 
 def package_delete(id, x_authorization=None):  # noqa: E501

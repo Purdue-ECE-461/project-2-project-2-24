@@ -4,6 +4,8 @@ from google.cloud import bigquery
 from openapi_server.models import *
 import os
 
+# TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
+
 class Database():
     def __init__(self):
         # Initialize client
@@ -24,7 +26,7 @@ class Database():
     # Params: 
     # user: models/User
     # package: models/Package
-    def upload_package(self, user, package):
+    def upload_package(self, token, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
@@ -50,7 +52,7 @@ class Database():
                 return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
-        upload_user_id = self.get_user_id(user.name)
+        upload_user_id = self.get_user_id_from_token(token)
         # TODO: CHECK AND REMOVE THIS
         upload_user_id=7
         if upload_user_id is None:
@@ -72,7 +74,6 @@ class Database():
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
             VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
         """
-
 
         results = self.execute_query(query)
         
