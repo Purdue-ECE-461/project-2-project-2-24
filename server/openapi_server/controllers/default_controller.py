@@ -31,8 +31,11 @@ def create_auth_token(authentication_request):  # noqa: E501
 
     :rtype: str
     """
-    if connexion.request.is_json:
-        authentication_request = AuthenticationRequest.from_dict(connexion.request.get_json())  # noqa: E501
+
+    print("\create_auth_token:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
@@ -48,6 +51,13 @@ def package_by_name_delete(name, x_authorization=None):  # noqa: E501
 
     :rtype: None
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_by_name_delete:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
@@ -63,6 +73,13 @@ def package_by_name_get(name, x_authorization=None):  # noqa: E501
 
     :rtype: List[PackageHistoryEntry]
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_by_name_get:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
@@ -78,66 +95,89 @@ def package_create(package, x_authorization=None):  # noqa: E501
 
     :rtype: PackageMetadata
     """
-    if connexion.request.is_json:
-        package = Package.from_dict(connexion.request.get_json())  # noqa: E501
 
     x_authorization_token = get_x_authorization_token()
+
+    print("\package_create:\n")
+    print(locals())
+    print()
 
     return db.upload_package(token=x_authorization_token, package=package)
     
 
-def package_delete(id, x_authorization=None):  # noqa: E501
+def package_delete(package_id, x_authorization=None):  # noqa: E501
     """Delete this version of the package.
 
      # noqa: E501
 
-    :param id: Package ID
-    :type id: str
+    :param package_id: Package ID
+    :type package_id: str
     :param x_authorization: 
     :type x_authorization: str
 
     :rtype: None
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_delete:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
-def package_rate(id, x_authorization=None):  # noqa: E501
+def package_rate(package_id, x_authorization=None):  # noqa: E501
     """package_rate
 
      # noqa: E501
 
-    :param id: 
-    :type id: str
+    :param package_id: 
+    :type package_id: str
     :param x_authorization: 
     :type x_authorization: str
 
     :rtype: PackageRating
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_rate:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
-def package_retrieve(id, x_authorization=None):  # noqa: E501
+def package_retrieve(package_id=None, x_authorization=None):  # noqa: E501
     """package_retrieve
 
     Return this package. # noqa: E501
 
-    :param id: ID of package to fetch
-    :type id: str
+    :param package_id: ID of package to fetch
+    :type package_id: str
     :param x_authorization: 
     :type x_authorization: str
 
     :rtype: Package
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_retrieve:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
-def package_update(id, package, x_authorization=None):  # noqa: E501
+def package_update(package_id, package, x_authorization=None):  # noqa: E501
     """Update this version of the package.
 
     The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents. # noqa: E501
 
-    :param id: 
-    :type id: str
+    :param package_id: 
+    :type package_id: str
     :param package: 
     :type package: dict | bytes
     :param x_authorization: 
@@ -145,6 +185,13 @@ def package_update(id, package, x_authorization=None):  # noqa: E501
 
     :rtype: None
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\package_update:\n")
+    print(locals())
+    print()
+
     if connexion.request.is_json:
         package = Package.from_dict(connexion.request.get_json())  # noqa: E501
     return 'do some magic!'
@@ -164,8 +211,13 @@ def packages_list(package_query, x_authorization=None, offset=None):  # noqa: E5
 
     :rtype: List[PackageMetadata]
     """
-    if connexion.request.is_json:
-        package_query = [PackageQuery.from_dict(d) for d in connexion.request.get_json()]  # noqa: E501
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\npackages_list:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
 
 
@@ -179,4 +231,11 @@ def registry_reset(x_authorization=None):  # noqa: E501
 
     :rtype: None
     """
+
+    x_authorization_token = get_x_authorization_token()
+
+    print("\nregistry_reset:\n")
+    print(locals())
+    print()
+
     return 'do some magic!'
