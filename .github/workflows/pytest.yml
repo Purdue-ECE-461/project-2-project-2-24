@@ -6,6 +6,7 @@ on:
 
 jobs:
   test:
+    name: PyTest
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -17,15 +18,17 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./server/requirements.txt
+          pip install ./server
       - name: Test Server
-        uses: cclauss/GitHub-Action-for-pytest@master
-        with:
-          args: pytest server
+        run: |
+          pytest server
       - name: Test Scorer
-        uses: cclauss/GitHub-Action-for-pytest@master
-        with:
-          args: pytest scorer
+        run: |
+          pytest scorer
       - name: Test Frontend
-        uses: cclauss/GitHub-Action-for-pytest@master
-        with:
-          args: pytest frontend
+        run: |
+          pytest frontend

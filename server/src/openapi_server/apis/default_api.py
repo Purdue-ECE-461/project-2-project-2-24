@@ -41,7 +41,6 @@ router = APIRouter()
 async def create_auth_token(
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
-    print("HELLO")
     return "example_token"
 
 

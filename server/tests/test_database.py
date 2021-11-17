@@ -1,10 +1,13 @@
 from __future__ import absolute_import
-from database import database
-from models import *
+from openapi_server.database import database
+from openapi_server.models.package import Package
+from openapi_server.models.package_data import PackageData
+from openapi_server.models.package_metadata import PackageMetadata
+from openapi_server.models.user import User
 from dotenv import load_dotenv
 
-
 load_dotenv()
+
 db = database.Database()
 
 user = User(name="Aiden", is_admin=True)
@@ -15,10 +18,7 @@ package =  Package(
 )
 
 def test_upload_package():
-    db.upload_package(user=user, package=package)
-
-def test_create_new_user(user):
-    db.create_new_user(user=user, new_user=user)
+    db.upload_package(token="example_token", package=package)
 
 if __name__ == "__main__":
     test_upload_package()

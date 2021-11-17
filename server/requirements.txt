@@ -34,3 +34,6 @@ uvicorn==0.13.4
 uvloop==0.14.0
 watchgod==0.7
 websockets==8.1
+google-cloud-bigquery
+pytest
+coverage

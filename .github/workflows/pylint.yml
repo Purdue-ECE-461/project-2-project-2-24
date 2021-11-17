@@ -6,10 +6,9 @@ on:
       - main
 
 jobs:
-  build:
-
+  lint:
+    name: PyLint
     runs-on: ubuntu-latest
-
     steps:
     - name: Check out
       uses: actions/checkout@v2
