@@ -1,0 +1,26 @@
+[
+    {
+        "description": "ID of user",
+        "name": "id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Username of user",
+        "name": "username",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "SHA256 hash of user password",
+        "name": "hash_pass",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "ID of user group user belongs to",
+        "name": "user_group_id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    }
+]

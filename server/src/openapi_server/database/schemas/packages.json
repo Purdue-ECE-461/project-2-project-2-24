@@ -1,0 +1,50 @@
+[
+    {
+        "description": "ID of package",
+        "name": "id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Name of package",
+        "name": "name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "URL of package",
+        "name": "url",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "description": "Version of package",
+        "name": "version",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "description": "Sensitivity of package",
+        "name": "sensitive",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Secrecy of package",
+        "name": "secret",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "User ID of user who uploaded or ingested package",
+        "name": "upload_user_id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Base64 encoded contents of zipped package",
+        "name": "zip",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    }
+]

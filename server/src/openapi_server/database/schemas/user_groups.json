@@ -1,0 +1,38 @@
+[
+    {
+        "description": "ID of user group",
+        "name": "id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Name of user group",
+        "name": "name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Upload permission",
+        "name": "upload",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Search permission",
+        "name": "search",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Download permission",
+        "name": "download",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Register (new users) permission",
+        "name": "register",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED"
+    }
+]

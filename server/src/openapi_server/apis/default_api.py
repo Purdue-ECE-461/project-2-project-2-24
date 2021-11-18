@@ -25,8 +25,14 @@ from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 
+from openapi_server.database.database import Database
 
 router = APIRouter()
+db = Database()
+
+
+def token_from_auth(auth):
+    return auth.split()[-1]
 
 
 @router.put(
@@ -90,7 +96,8 @@ async def package_create(
     x_authorization: str = Header(None, description=""),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
-    ...
+    metadata = db.upload_package(token_from_auth(x_authorization), package)
+    return metadata
 
 
 @router.delete(

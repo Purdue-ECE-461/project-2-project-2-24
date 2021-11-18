@@ -31,13 +31,16 @@ class Database():
 
 
     # Params: 
-    # user: models/User
-    # package: models/Package
-    def upload_package(self, token, package):
+    # auth: token (string)
+    # package: package (models/Package)
+    def upload_package(self, auth, package):
+        # Initialize query
+        query = ""
+
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
-        # Check if package already exists
+        # Add check if package already exists
         name = metadata.name
         version = metadata.version
         if self.package_exists(name, version):
