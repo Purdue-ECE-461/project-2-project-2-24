@@ -26,9 +26,10 @@ jobs:
         uses: ShiftLeftSecurity/scan-action@master
         with:
               type: "python,java"
-        env:
-              WORKSPACE: https://github.com/${{ github.repository }}/blob/${{ github.sha }}
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        env:
+#              WORKSPACE: https://github.com/${{ REPO }}/blob/${{ github.sha }}
+#              GITHUB_TOKEN: ${{ secrets.TOKEN }}
+#              SCAN_AUTO_BUILD: true
       - uses: actions/upload-artifact@v1
         with:
           name: reports
