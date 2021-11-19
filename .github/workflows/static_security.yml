@@ -1,0 +1,24 @@
+name: Static Security Testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+  schedule:
+    - cron: '32 11 * * 0'
+
+jobs:
+  rest-api-static-security-testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Static Security Testing
+        uses: 42Crunch/api-security-audit-action@v1
+        with:
+          api-token: ${{ secrets.API_TOKEN }}
+          min-score: 75
+          upload-to-code-scanning: true
+          github-token: ${{ github.token }}
