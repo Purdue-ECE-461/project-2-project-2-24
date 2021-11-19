@@ -15,7 +15,7 @@ import datetime # pragma: no cover
 import file_parser # pragma: no cover
 from total_data_helper import total_data_helper # pragma: no cover
 from time import time # pragma: no cover
-import pkg_resources
+import pkg_resources # pragma: no cover
 
 def fraction_dependency(dependency_list):           
     #installed_packages = pkg_resources.working_set
