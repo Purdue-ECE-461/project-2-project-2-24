@@ -22,3 +22,5 @@ jobs:
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
           deliverables: server/app.yaml
+      - name: Perform Scan
+        uses: ShiftLeftSecurity/scan-action@master
