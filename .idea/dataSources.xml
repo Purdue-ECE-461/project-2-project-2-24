@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="Google BigQuery" uuid="5fb47613-d81c-461d-9115-7bb6befc6b51">
+      <driver-ref>bigquery</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.simba.googlebigquery.jdbc42.Driver</jdbc-driver>
+      <jdbc-url>jdbc:bigquery://https://www.googleapis.com/bigquery/v2:;ProjectId=ece-461-proj-2-24;OAuthType=0;OAuthServiceAcctEmail=ece-461-proj-2-24@ece-461-proj-2-24.iam.gserviceaccount.com;OAuthPvtKeyPath=$PROJECT_DIR$/server/ece-461-proj-2-24-acaa7a77b598.json</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>

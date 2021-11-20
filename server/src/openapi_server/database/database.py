@@ -10,6 +10,7 @@ from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 import os
+import hashlib
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
@@ -34,9 +35,6 @@ class Database():
     # auth: token (string)
     # package: package (models/Package)
     def upload_package(self, auth, package):
-        # Initialize query
-        query = ""
-
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
@@ -47,22 +45,23 @@ class Database():
             return Error(code=403, message="Package-Version already exists, use 'Update' instead!")
 
         # Get id
-        id = metadata.id
-        if id is None or self.id_exists("packages", id):
-            id = self.gen_new_id("packages")
-            metadata.id = id
+        package_id = metadata.id
+        if id is None or self.package_id_exists(id):
+            package_id = self.gen_new_package_id()
+            metadata.id = package_id
         
         # Content or URL or both should be set for upload
         content = data.content
         url = data.url
         if content is None and url is None:
             if content is None:
-                return Error(code=400, message="Missing package content for upload!")
+                return Error(code=400, message="Missing package contents for upload!")
             else:
                 return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
-        upload_user_id = self.get_user_id_from_token(token)
+        # TODO: IMPLEMENT THIS
+        upload_user_id = self.get_user_id_from_token(auth.token)
         # TODO: CHECK AND REMOVE THIS
         upload_user_id=7
         if upload_user_id is None:
@@ -94,12 +93,12 @@ class Database():
 
     def upload_js_program(self, package_id, js_program):
         # Get new script id
-        id = self.gen_new_id("scripts")
+        js_program_id = self.gen_new_integer_id("scripts")
 
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts (id, package_id, script)
-            VALUES ({id}, {package_id}, "{js_program.encode("unicode_escape").decode("utf-8")}")
+            VALUES ({js_program_id}, {package_id}, "{js_program.encode("unicode_escape").decode("utf-8")}")
         """
 
         # Execute query
@@ -111,19 +110,24 @@ class Database():
     def create_new_user(self, user, new_user, password, user_group):
         # Is user allowed to create a new user?
         if (not user.is_admin):
-            # TODO: Return error here that user is not allowed to make new users
-            return 0
+            return Error(code=401, message="Must be admin to create new user")
         
         # Generate id for new user
-        new_user_id = self.gen_new_id("users")
+        new_user_id = self.gen_new_integer_id("users")
+
+        # Get username
+        new_user_username = new_user.name
+
+        # Get password
+        new_user_password_hash = hashlib.sha256(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)
 
         # Generate query
         query = f"""
-            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, name, url, version, sensitive, secret, upload_user_id, zip)
-            VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
+            VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", "{user_group_id}")
         """
 
         results = self.execute_query(query)
@@ -183,17 +187,22 @@ class Database():
             return None
 
     
-    def id_exists(self, table, id):
+    def package_id_exists(self, id):
         # Generate query
         query = f"""
-            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} WHERE id = "{id}""
+            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE id = "{id}"
         """
 
         results = self.execute_query(query)
 
         return (len(results) > 0)
 
-    
+
+    def gen_new_package_id(self):
+        #TODO
+        return "new_id"
+
+
     def package_exists(self, name, version):
         # Generate query
         query = f"""
