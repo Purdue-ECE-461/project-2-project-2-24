@@ -31,6 +31,11 @@ class Database():
             exit(1)
 
 
+    def get_user_id_from_token(self, token):
+        # TODO: IMPLEMENT
+        return 1
+
+
     # Params: 
     # auth: token (string)
     # package: package (models/Package)
@@ -46,9 +51,11 @@ class Database():
 
         # Get id
         package_id = metadata.id
-        if id is None or self.package_id_exists(id):
+        if id is None:
             package_id = self.gen_new_package_id()
-            metadata.id = package_id
+        elif self.package_id_exists(package_id):
+            package_id = package_id + self.gen_new_package_id()
+        metadata.id = package_id
         
         # Content or URL or both should be set for upload
         content = data.content
@@ -60,10 +67,7 @@ class Database():
                 return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
-        # TODO: IMPLEMENT THIS
         upload_user_id = self.get_user_id_from_token(auth.token)
-        # TODO: CHECK AND REMOVE THIS
-        upload_user_id=7
         if upload_user_id is None:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
@@ -76,7 +80,7 @@ class Database():
             # Get js_program
             js_program = data.js_program
             if js_program is not None:
-                self.upload_js_program(id, js_program)
+                upload = self.upload_js_program(id, js_program)
 
         # Generate query
         query = f"""
@@ -199,7 +203,14 @@ class Database():
 
 
     def gen_new_package_id(self):
-        #TODO
+        # Generate query
+        query = f"""
+            SELECT GENERATE_UUID() AS package_id
+        """
+
+        results = self.execute_query(query)
+
+        # TODO get package_id from query
         return "new_id"
 
 
