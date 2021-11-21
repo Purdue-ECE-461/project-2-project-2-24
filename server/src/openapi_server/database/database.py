@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from re import L
 from google.cloud import bigquery
+from google.api_core.exceptions import BadRequest
 from openapi_server.models.extra_models import TokenModel  # noqa: F401
 from openapi_server.models.authentication_request import AuthenticationRequest
 from openapi_server.models.error import Error
@@ -31,15 +32,31 @@ class Database():
             exit(1)
 
 
+    def hash(self, content):
+        return hashlib.sha256(content.encode()).hexdigest()
+
+
     def get_user_id_from_token(self, token):
-        # TODO: IMPLEMENT
-        return 1
+        hashed_token = self.hash(token)
+
+        query = f"""
+            SELECT user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens WHERE hash_token = "{hashed_token}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        elif len(results) > 0:
+            return results[0].get("user_id", default=None)
+        else:
+            return None
 
 
     # Params: 
     # auth: token (string)
     # package: package (models/Package)
-    def upload_package(self, auth, package):
+    def upload_package(self, token, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
@@ -51,10 +68,10 @@ class Database():
 
         # Get id
         package_id = metadata.id
-        if id is None:
-            package_id = self.gen_new_package_id()
+        if package_id is None:
+            package_id = name + "_" + version
         elif self.package_id_exists(package_id):
-            package_id = package_id + self.gen_new_package_id()
+            package_id = package_id + self.gen_new_uuid()
         metadata.id = package_id
         
         # Content or URL or both should be set for upload
@@ -67,48 +84,58 @@ class Database():
                 return Error(code=400, message="Missing URL for ingest!")
 
         # Get user id
-        upload_user_id = self.get_user_id_from_token(auth.token)
+        upload_user_id = self.get_user_id_from_token(token)
         if upload_user_id is None:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
+        # To do this, add sensitive and secret flags to project metadata
+        # Whiel you're add it, add user group to user model (in yaml spec)
+        # Maybe add UserGroup model as well?
+        # While you're add it, add any other models needed
+        # Then check if
         sensitive = True
         secret = True
         
-        query = None
         if sensitive:
             # Get js_program
             js_program = data.js_program
             if js_program is not None:
-                upload = self.upload_js_program(id, js_program)
+                self.upload_js_program(package_id, js_program)
 
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-            VALUES ({id}, "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+            VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
         """
 
         results = self.execute_query(query)
-        
-        # TODO: Ensure upload was successful.  If it was, return metadata, if not, return an error
 
-        return metadata
+        if isinstance(results, Error):
+            return results
+        else:
+            return metadata
 
 
     def upload_js_program(self, package_id, js_program):
         # Get new script id
         js_program_id = self.gen_new_integer_id("scripts")
+        if js_program_id is None:
+            return Error(code=500, message="Couldn't generate new js_program id!")
 
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts (id, package_id, script)
-            VALUES ({js_program_id}, {package_id}, "{js_program.encode("unicode_escape").decode("utf-8")}")
+            VALUES ({js_program_id}, "{package_id}", "{js_program.encode("unicode_escape").decode("utf-8")}")
         """
 
         # Execute query
         results = self.execute_query(query)
 
-        return id
+        if isinstance(results, Error):
+            return results
+        else:
+            return js_program_id
 
 
     def create_new_user(self, user, new_user, password, user_group):
@@ -123,7 +150,7 @@ class Database():
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = hashlib.sha256(password)
+        new_user_password_hash = self.hash(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)
@@ -142,7 +169,7 @@ class Database():
     def gen_new_integer_id(self, table):
         # TODO: Find lowest available positive integer ID in given table and return it
         query = f"""
-            SELECT  id + 1
+            SELECT  id + 1 AS new_id
             FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} tableo
             WHERE   NOT EXISTS
                     (
@@ -158,13 +185,12 @@ class Database():
         # TODO: Parse results and return new id
         results = self.execute_query(query)
 
-        if (len(results) == 0):
+        if isinstance(results, Error):
+            return results
+        elif len(results) == 0:
             return 1
         else:
-            # TODO CHECK THIS
-            #return results[0].get("id")
-            # TODO FIX THIS
-            return 8
+            return results[0].get("new_id", default=None)
 
 
     def get_user_group_id(self, group_name):
@@ -173,8 +199,13 @@ class Database():
             SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups WHERE name = "{group_name}"
         """
         results = self.execute_query(query)
-        # TODO: Get id from query, if it exists
-        return 1
+
+        if isinstance(results, Error):
+            return results
+        elif len(results) == 0:
+            return None
+        else:
+            return results[0].get("id", default=None)
 
     
     def get_user_id(self, name):
@@ -185,10 +216,12 @@ class Database():
 
         results = self.execute_query(query)
 
-        if (len(results) > 0):
-            return results[0].get("id")
-        else:
+        if isinstance(results, Error):
+            return results
+        elif len(results) == 0:
             return None
+        else:
+            return results[0].get("id", default=None)
 
     
     def package_id_exists(self, id):
@@ -199,19 +232,26 @@ class Database():
 
         results = self.execute_query(query)
 
-        return (len(results) > 0)
+        if isinstance(results, Error):
+            return results
+        else:
+            return (len(results) > 0)
 
 
-    def gen_new_package_id(self):
+    def gen_new_uuid(self):
         # Generate query
         query = f"""
-            SELECT GENERATE_UUID() AS package_id
+            SELECT GENERATE_UUID() AS new_uuid
         """
 
         results = self.execute_query(query)
 
-        # TODO get package_id from query
-        return "new_id"
+        if isinstance(results, Error):
+            return results
+        elif len(results) == 0:
+            return None
+        else:
+            return results[0].get("new_uuid")
 
 
     def package_exists(self, name, version):
@@ -222,18 +262,28 @@ class Database():
 
         results = self.execute_query(query)
 
-        return (len(results) > 0)
+        if isinstance(results, Error):
+            return results
+        else:
+            return (len(results) > 0)
 
 
     def execute_query(self, query):
         print("QUERY:")
         print(query)
+
         query_job = self.client.query(query)
 
-        results = list(query_job.result())
+        try:
+            results = list(query_job.result())
+            print("QUERY RESPONSE:")
+            for row in results:
+                print(row)
+            return results
 
-        print("QUERY RESPONSE:")
-        for row in results:
-            print(row)
-
-        return results
+        except BadRequest as e:
+            error_output = ""
+            for e in query_job.errors:
+                error_output += 'ERROR: {}'.format(e['message']) + "\n"
+            print(error_output)
+            return Error(code=500, message=error_output)

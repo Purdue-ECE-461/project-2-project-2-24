@@ -19,47 +19,69 @@ package =  Package(
 
 
 def test_get_user_id_from_token():
-    return "TODO"
+    print("\nTESTING: Get user ID from token")
+    print()
+    print("TODO")
 
 
 def test_upload_package():
-    db.upload_package(token="example_token", package=package)
+    print("\nTESTING: Upload package")
+    print()
+    print(db.upload_package(token="example_token", package=package))
 
 
 def test_upload_js_program():
-    return "TODO"
+    print("\nTESTING: Upload js program")
+    print()
+    print("TODO")
 
 
 def test_create_new_user():
-    return "TODO"
+    print("\nTESTING: Create new user")
+    print()
+    print("TODO")
 
 
 def test_gen_new_integer_id():
-    return "TODO"
+    print("\nTESTING: Generate new integer ID")
+    print()
+    print("TODO")
 
 
 def test_get_user_group_id():
-    return "TODO"
+    print("\nTESTING: Get user group ID")
+    print()
+    print("TODO")
 
 
 def test_get_user_id():
-    return "TODO"
+    print("\nTESTING: Get user ID")
+    print()
+    print("TODO")
 
 
 def test_package_id_exists():
-    return "TODO"
+    print("\nTESTING: Package ID exists")
+    print()
+    print("TODO")
 
 
 def test_gen_new_package_id():
-    return "TODO"
+    print("\nTESTING: Generate new package ID")
+    print()
+    print("TODO")
 
 
 def test_package_exists():
-    return "TODO"
+    print("\nTESTING: Package exists")
+    print()
+    print("TODO")
 
 
 def test_execute_query():
-    return "TODO"
+    print("\nTESTING: Execute query")
+    print()
+    print("TODO")
 
 
 if __name__ == "__main__":
@@ -73,5 +95,4 @@ if __name__ == "__main__":
     test_gen_new_package_id()
     test_package_exists()
     test_execute_query()
-
     test_upload_package()
