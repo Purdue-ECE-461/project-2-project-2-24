@@ -61,6 +61,7 @@ class Database():
         metadata, data = package.metadata, package.data
 
         # Add check if package already exists
+        # TODO: * character is reserved
         name = metadata.name
         version = metadata.version
         if self.package_exists(name, version):
@@ -89,8 +90,7 @@ class Database():
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
-        # To do this, add sensitive and secret flags to project metadata
-        # Whiel you're add it, add user group to user model (in yaml spec)
+        # While you're add it, add user group to user model (in yaml spec)
         # Maybe add UserGroup model as well?
         # While you're add it, add any other models needed
         # Then check if
