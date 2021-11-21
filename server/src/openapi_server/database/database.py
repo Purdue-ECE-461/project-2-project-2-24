@@ -183,7 +183,6 @@ class Database():
         return results
 
     def gen_new_integer_id(self, table):
-        # TODO: Find lowest available positive integer ID in given table and return it
         query = f"""
             SELECT  id + 1 AS new_id
             FROM    {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.{table} tableo
@@ -198,7 +197,6 @@ class Database():
             LIMIT 1
         """
 
-        # TODO: Parse results and return new id
         results = self.execute_query(query)
 
         if isinstance(results, Error):
