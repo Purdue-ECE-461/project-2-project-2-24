@@ -36,7 +36,10 @@ class Database():
     def hash(self, content):
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def create_new_token(self, user_id):
+    def create_new_token(self, user, password):
+        # TODO: Confirm user password match
+
+        user_id = self.get_user_id(user.name)
         new_token_id = self.gen_new_integer_id("tokens")
         new_token = self.hash(str(round(time.time() * 1000)))
         new_token_hash = self.hash(new_token)

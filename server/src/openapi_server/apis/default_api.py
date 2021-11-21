@@ -47,7 +47,7 @@ def token_from_auth(auth):
 async def create_auth_token(
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
-    return "example_token"
+    return db.create_new_token(token_from_auth(authentication_request))
 
 
 @router.delete(
