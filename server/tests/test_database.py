@@ -30,9 +30,9 @@ invalid_query = f"""
 def test_create_new_token():
     print("\nTESTING: Create new token")
     print()
-    new_token = db.create_new_token(1)
-    print("New token: " + new_token)
-    return new_token
+    created_token = db.create_new_token(user, "password")
+    print("New token: " + created_token)
+    return created_token
 
 
 def test_get_user_id_from_token(token):
