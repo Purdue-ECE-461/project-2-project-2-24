@@ -36,10 +36,10 @@ class Database():
     def hash(self, content):
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def create_new_token(self, user, password):
-        # TODO: Confirm user password match
+    def create_new_token(self, auth_request):
+        # TODO: Confirm user password is valid
 
-        user_id = self.get_user_id(user.name)
+        user_id = self.get_user_id(auth_request.user.name)
         new_token_id = self.gen_new_integer_id("tokens")
         new_token = self.hash(str(round(time.time() * 1000)))
         new_token_hash = self.hash(new_token)
@@ -91,7 +91,7 @@ class Database():
         if package_id is None:
             package_id = name + "_" + version
         elif self.package_id_exists(package_id):
-            package_id = package_id + self.gen_new_uuid()
+            package_id = package_id + "_" + name + "_" + version
         metadata.id = package_id
 
         # Content or URL or both should be set for upload

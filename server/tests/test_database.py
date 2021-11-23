@@ -10,27 +10,13 @@ load_dotenv()
 
 db = database.Database()
 
-user = User(name="Aiden", is_admin=True)
-new_user = User(name="Matthew", is_admin=False)
-package =  Package(
-    metadata= PackageMetadata(name="PackageName", version="1.2.3", id="5"), 
-    data= PackageData(content="packagecontent", url="https://www.package.url", js_program="javascript_code;")
-)
 user_group = None
 
-valid_query = f"""
-    SELECT COUNT(*) FROM `ece-461-proj-2-24.module_registry.packages`
-"""
 
-invalid_query = f"""
-    SELECT invalid_something FROM `table.smmethin.packages`
-"""
-
-
-def test_create_new_token():
+def test_create_new_token(user, user_auth):
     print("\nTESTING: Create new token")
     print()
-    new_token = db.create_new_token(1)
+    new_token = db.create_new_token()
     print("New token: " + new_token)
     return new_token
 
