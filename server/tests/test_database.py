@@ -1,9 +1,7 @@
 from __future__ import absolute_import
 from openapi_server.database import database
-from openapi_server.models.package import Package
-from openapi_server.models.package_data import PackageData
+from openapi_server.models.error import Error
 from openapi_server.models.package_metadata import PackageMetadata
-from openapi_server.models.user import User
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,12 +10,15 @@ db = database.Database()
 
 user_group = None
 
+# TODO: ADD USER GROUP CREATE FUNCTIONALITY / TEST
+
 
 def test_create_new_user(user):
     print("\nTESTING: Create new user")
     print()
     results = db.create_new_user(user, user, "password", 1)
     print("Created new user: ", results)
+    assert not isinstance(results, Error)
 
 
 def test_create_new_token(auth_request):
@@ -25,6 +26,7 @@ def test_create_new_token(auth_request):
     print()
     created_token = db.create_new_token(auth_request)
     print("New token: " + created_token)
+    assert isinstance(created_token, str)
 
 
 def test_get_user_id_from_token(token):
@@ -32,6 +34,7 @@ def test_get_user_id_from_token(token):
     print()
     user_id = db.get_user_id_from_token(token)
     print("User ID:", user_id)
+    assert isinstance(user_id, int)
 
 
 def test_upload_package(token, package):
@@ -39,6 +42,7 @@ def test_upload_package(token, package):
     print()
     metadata = db.upload_package(token=token, package=package)
     print("Uploaded metadata:", metadata)
+    assert isinstance(metadata, PackageMetadata)
 
 
 def test_upload_js_program(package_id, js_program):
@@ -46,6 +50,7 @@ def test_upload_js_program(package_id, js_program):
     print()
     js_program_id = db.upload_js_program(package_id, js_program)
     print("JS program id:", js_program_id)
+    assert isinstance(js_program_id, int)
 
 
 def test_gen_new_integer_id(table):
@@ -53,6 +58,7 @@ def test_gen_new_integer_id(table):
     print()
     new_id = db.gen_new_integer_id(table)
     print("New id:", new_id)
+    assert isinstance(new_id, int)
 
 
 # def test_create_new_user_group():
@@ -74,6 +80,7 @@ def test_get_user_id(username):
     print()
     user_id = db.get_user_id(username)
     print("User id:", user_id)
+    assert isinstance(user_id, int)
 
 
 def test_package_id_exists(package_id):
@@ -81,6 +88,7 @@ def test_package_id_exists(package_id):
     print()
     package_id_exists = db.package_id_exists(package_id)
     print("Package ID exists:", package_id_exists)
+    assert isinstance(package_id_exists, bool)
 
 
 def test_package_exists(package):
@@ -88,6 +96,7 @@ def test_package_exists(package):
     print()
     package_exists = db.package_exists(package.metadata.name, package.metadata.version)
     print("Package exists:", package_exists)
+    assert isinstance(package_exists, bool)
 
 
 def test_execute_valid_query(valid_query):
@@ -95,6 +104,7 @@ def test_execute_valid_query(valid_query):
     print()
     results = db.execute_query(valid_query)
     print("Execute valid query:", results)
+    assert not isinstance(results, Error)
 
 
 def test_execute_invalid_query(invalid_query):
@@ -102,3 +112,4 @@ def test_execute_invalid_query(invalid_query):
     print()
     results = db.execute_query(invalid_query)
     print("Execute invalid query:", results)
+    assert isinstance(results, Error)
