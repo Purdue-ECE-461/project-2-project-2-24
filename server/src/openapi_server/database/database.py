@@ -17,6 +17,8 @@ import time
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
+MAX_TOKEN_USES = 1000
+
 class Database():
     def __init__(self):
         # Initialize client
@@ -46,7 +48,7 @@ class Database():
 
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens (id, hash_token, created, interactions, user_id)
-            VALUES ({new_token_id}, "{new_token_hash}", CURRENT_TIMESTAMP(), 10000, {user_id})
+            VALUES ({new_token_id}, "{new_token_hash}", CURRENT_TIMESTAMP(), {MAX_TOKEN_USES}, {user_id})
         """
 
         results = self.execute_query(query)

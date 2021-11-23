@@ -13,12 +13,12 @@ db = database.Database()
 user_group = None
 
 
-def test_create_new_token(user, user_auth):
+def test_create_new_token(auth_request):
     print("\nTESTING: Create new token")
     print()
-    new_token = db.create_new_token()
-    print("New token: " + new_token)
-    return new_token
+    created_token = db.create_new_token(auth_request)
+    print("New token: " + created_token)
+    return created_token
 
 
 def test_get_user_id_from_token(token):
