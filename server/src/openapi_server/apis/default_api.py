@@ -47,7 +47,7 @@ def token_from_auth(auth):
 async def create_auth_token(
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
-    return db.create_new_token(token_from_auth(authentication_request))
+    return db.create_new_token(authentication_request)
 
 
 @router.delete(
@@ -61,7 +61,7 @@ async def create_auth_token(
 )
 async def package_by_name_delete(
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
 
@@ -77,11 +77,10 @@ async def package_by_name_delete(
 )
 async def package_by_name_get(
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> List[PackageHistoryEntry]:
     """Return the history of this package (all versions)."""
     ...
-
 
 @router.post(
     "/package",
@@ -93,7 +92,7 @@ async def package_by_name_get(
     tags=["default"],
 )
 async def package_create(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
     metadata = db.upload_package(token_from_auth(x_authorization), package)
@@ -111,7 +110,7 @@ async def package_create(
 )
 async def package_delete(
     id: str = Path(None, description="Package ID"),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
 
@@ -127,7 +126,7 @@ async def package_delete(
 )
 async def package_rate(
     id: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> PackageRating:
     ...
 
@@ -142,7 +141,7 @@ async def package_rate(
 )
 async def package_retrieve(
     id: str = Path(None, description="ID of package to fetch"),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> Package:
     """Return this package."""
     ...
@@ -160,7 +159,7 @@ async def package_retrieve(
 async def package_update(
     id: str = Path(None, description=""),
     package: Package = Body(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
     ...
@@ -177,7 +176,7 @@ async def package_update(
 )
 async def packages_list(
     package_query: List[PackageQuery] = Body(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
@@ -193,6 +192,6 @@ async def packages_list(
     tags=["default"],
 )
 async def registry_reset(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
