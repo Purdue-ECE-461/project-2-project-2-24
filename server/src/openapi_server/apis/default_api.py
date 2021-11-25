@@ -162,7 +162,11 @@ async def package_update(
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
-    ...
+    success = db.update_package(token_from_auth(x_authorization), id, package)
+    if success:
+        return {"description": "Success."}
+    else:
+        return Error(code=400, message="Malformed request!")
 
 
 @router.post(
