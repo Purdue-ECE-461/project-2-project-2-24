@@ -10,7 +10,7 @@
             "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}/server",
             "request": "launch",
-            "program": "${workspaceFolder}/server/openapi_server/test/test_database.py",
+            "program": "${workspaceFolder}/server/tests/test_database.py",
             "console": "integratedTerminal"
         }
     ]

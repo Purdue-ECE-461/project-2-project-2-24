@@ -16,10 +16,15 @@ elif [ $1 == "install" ]; then
     pip3 install -r requirements.txt
     pip3 install -e .
     deactivate
+elif [ $1 == "start" ]; then
+    source venv/bin/activate
+    export $(grep -v '^#' .env | xargs -d '\n')
+    python3 -m uvicorn openapi_server.main:app --host localhost --port 8080
+    deactivate
 elif [[ $1 == "test" ]]; then
     source venv/bin/activate
     > test_output.txt
-    source src/openapi_server/.env
+    export $(grep -v '^#' .env | xargs -d '\n')
     coverage run -m pytest tests >> test_output.txt
     coverage report -m >> test_output.txt
     deactivate
@@ -28,6 +33,8 @@ elif [[ $1 == "clean" ]]; then
     rm -r src/openapi_server/__pycache__
     rm -r .pytest_cache
     rm -r venv
+    rm -r build
+    rm -r openapi_server.egg-info
 else
     echo "Invalid command line argument"
     echo "Use the '-help' option to see options!"
