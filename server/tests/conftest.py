@@ -68,6 +68,15 @@ def package_id(package) -> str:
     return package.metadata.name + "_" + package.metadata.version
 
 
+# @pytest.fixture
+# def user_group_name(user_group) -> str:
+#     return user_group.name
+
+@pytest.fixture
+def user_group_name() -> str:
+    return "Admin"
+
+
 @pytest.fixture
 def js_program() -> str:
     return "javascript_program;"

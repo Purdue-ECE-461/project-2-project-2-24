@@ -14,10 +14,10 @@ import os
 import hashlib
 import time
 
-
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
 MAX_TOKEN_USES = 1000
+
 
 class Database():
     def __init__(self):
@@ -74,6 +74,56 @@ class Database():
         else:
             return None
 
+    def update_package(self, token, package_id, package):
+        # Get metadata and data
+        metadata, data = package.metadata, package.data
+
+        # Name, version, and ID must match
+        name = metadata.name
+        version = metadata.version
+        existing_package_id = self.get_package(name, version)
+        if isinstance(package, Error):
+            return package
+        elif (existing_package_id != package_id):
+            return Error(code=403, message="Supplied ID does not match ID in registry: " + package_id)
+        metadata.id = package_id
+
+        # Content or URL or both should be set for upload
+        content = data.content if data.content is not None else ""
+        url = data.url if data.url is not None else ""
+        if content == "" and url == "":
+            return Error(code=400, message="Missing URL AND Content!! Need at least one.")
+
+        # Get user id
+        upload_user_id = self.get_user_id_from_token(token)
+        if upload_user_id is None:
+            return Error(code=500, message="Cannot find ID of uploading user!!")
+
+        # TODO: Implement sensitive and secret flags
+        sensitive = True
+        secret = True
+
+        if sensitive:
+            # Get js_program
+            js_program = data.js_program
+            if js_program is not None:
+                self.update_js_program("packageid", js_program)
+
+        # Generate query
+        query = f"""
+                    UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages 
+                    SET (id, name, url, version, sensitive, secret, upload_user_id, zip)
+                    VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+                    WHERE id = {package_id}
+                """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        else:
+            return metadata
+
     # Params:
     # auth: token (string)
     # package: package (models/Package)
@@ -100,10 +150,7 @@ class Database():
         content = data.content
         url = data.url
         if content is None and url is None:
-            if content is None:
-                return Error(code=400, message="Missing package contents for upload!")
-            else:
-                return Error(code=400, message="Missing URL for ingest!")
+            return Error(code=400, message="Missing URL AND Content!! Need at least one.")
 
         # Get user id
         upload_user_id = self.get_user_id_from_token(token)
@@ -272,18 +319,24 @@ class Database():
         else:
             return results[0].get("new_uuid")
 
-    def package_exists(self, name, version):
+    def get_package(self, name, version):
         # Generate query
         query = f"""
-            SELECT name, version from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE name = "{name}" AND version = "{version}"
-        """
+                    SELECT * from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE name = "{name}" AND version = "{version}"
+                """
 
         results = self.execute_query(query)
 
-        if isinstance(results, Error):
-            return results
+        return results
+
+    def package_exists(self, name, version):
+        # Generate query
+        package = self.get_package(name, version)
+
+        if isinstance(package, Error):
+            return package
         else:
-            return (len(results) > 0)
+            return len(package) > 0
 
     def execute_query(self, query):
         print("QUERY:")

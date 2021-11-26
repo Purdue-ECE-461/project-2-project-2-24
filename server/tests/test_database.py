@@ -12,29 +12,34 @@ user_group = None
 
 # TODO: ADD USER GROUP CREATE FUNCTIONALITY / TEST
 
-
-def test_create_new_user(user):
-    print("\nTESTING: Create new user")
-    print()
-    results = db.create_new_user(user, user, "password", 1)
-    print("Created new user: ", results)
-    assert not isinstance(results, Error)
+# def test_create_new_user_group(user_group_name):
+#     print("\nTESTING: Create new user group")
+#     print()
+#     results = db.create_new_user_group()
 
 
-def test_create_new_token(auth_request):
-    print("\nTESTING: Create new token")
-    print()
-    created_token = db.create_new_token(auth_request)
-    print("New token: " + created_token)
-    assert isinstance(created_token, str)
+# def test_create_new_user(user):
+#     print("\nTESTING: Create new user")
+#     print()
+#     results = db.create_new_user(user, user, "password", 1)
+#     print("Created new user: ", results)
+#     assert not isinstance(results, Error)
 
 
-def test_get_user_id_from_token(token):
-    print("\nTESTING: Get user ID from token")
-    print()
-    user_id = db.get_user_id_from_token(token)
-    print("User ID:", user_id)
-    assert isinstance(user_id, int)
+# def test_create_new_token(auth_request):
+#     print("\nTESTING: Create new token")
+#     print()
+#     created_token = db.create_new_token(auth_request)
+#     print("New token: " + created_token)
+#     assert isinstance(created_token, str)
+
+
+# def test_get_user_id_from_token(token):
+#     print("\nTESTING: Get user ID from token")
+#     print()
+#     user_id = db.get_user_id_from_token(token)
+#     print("User ID:", user_id)
+#     assert isinstance(user_id, int)
 
 
 def test_upload_package(token, package):
@@ -42,6 +47,14 @@ def test_upload_package(token, package):
     print()
     metadata = db.upload_package(token=token, package=package)
     print("Uploaded metadata:", metadata)
+    assert isinstance(metadata, PackageMetadata)
+
+
+def test_update_package(token, package_id, package):
+    print("\nTESTING: Update package")
+    print()
+    metadata = db.update_package(token=token, package_id=package_id, package=package)
+    print("Updated metadata:", metadata)
     assert isinstance(metadata, PackageMetadata)
 
 
