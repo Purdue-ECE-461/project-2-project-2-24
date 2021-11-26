@@ -8,9 +8,21 @@ load_dotenv()
 
 db = database.Database()
 
-user_group = None
-
 # TODO: ADD USER GROUP CREATE FUNCTIONALITY / TEST
+
+
+def test_create_new_user_group(token, user_group):
+    print("\nTESTING: Create new user group")
+    print()
+    new_group = db.create_new_user_group(token, user_group)
+    print("New user group:", new_group)
+    assert not isinstance(user_group, Error)
+
+
+def test_get_user_group_id():
+    print("\nTESTING: Get user group ID")
+    print()
+    print("TODO")
 
 
 def test_create_new_user(user):
@@ -59,20 +71,6 @@ def test_gen_new_integer_id(table):
     new_id = db.gen_new_integer_id(table)
     print("New id:", new_id)
     assert isinstance(new_id, int)
-
-
-# def test_create_new_user_group():
-#     print("\nTESTING: Create new user group")
-#     print()
-#     new_group = db.create_new_user_group(user_group)
-#     print("New user group:", new_group)
-#     return new_group
-#
-#
-# def test_get_user_group_id():
-#     print("\nTESTING: Get user group ID")
-#     print()
-#     print("TODO")
 
 
 def test_get_user_id(username):

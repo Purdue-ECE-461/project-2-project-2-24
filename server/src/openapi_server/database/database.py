@@ -33,7 +33,6 @@ class Database():
         except KeyError as err:
             print("Cannot initialize Database!!!")
             print(err)
-            exit(1)
 
     def hash(self, content):
         return hashlib.sha256(content.encode()).hexdigest()
@@ -160,7 +159,7 @@ class Database():
 
     def create_new_user(self, user, new_user, password, user_group):
         # Is user allowed to create a new user?
-        if (not user.is_admin):
+        if not user.is_admin:
             return Error(code=401, message="Must be admin to create new user")
 
         # Generate id for new user
@@ -187,6 +186,36 @@ class Database():
 
         return results
 
+    def create_new_user_group(self, token, user_group):
+        # Is user allowed to create a new user?
+        if not user.is_admin:
+            return Error(code=401, message="Must be admin to create new user")
+
+        # Generate id for new user
+        new_user_id = self.gen_new_integer_id("users")
+
+        # Get username
+        new_user_username = new_user.name
+
+        # Get password
+        new_user_password_hash = self.hash(password)
+
+        # Get user group id
+        user_group_id = self.get_user_group_id(user_group)
+        if user_group_id is None:
+            return Error(code=400, message="Cannot find user group with provided name! User not created!")
+
+        # Generate query
+        query = f"""
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
+                    VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", "{user_group_id}")
+                """
+
+        results = self.execute_query(query)
+
+        return results
+        return
+
     def gen_new_integer_id(self, table):
         query = f"""
             SELECT  id + 1 AS new_id
@@ -210,10 +239,6 @@ class Database():
             return 1
         else:
             return results[0].get("new_id", default=None)
-
-    def create_new_user_group(self, user_group):
-        # TODO?
-        return
 
     def get_user_group_id(self, group_name):
         # Generate query
