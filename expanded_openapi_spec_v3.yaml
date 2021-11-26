@@ -480,6 +480,14 @@ components:
           $ref: '#/components/schemas/PackageID'
           description: "Unique ID for use with the /package/{id} endpoint."
           example: "123567192081501"
+        Sensitive:
+          description: "Sensitivity of package.  If True, js_program must be run before\
+            \ allowing download of the package."
+          type: boolean
+        Secret:
+          description: "Secrecy of package.  If True, package can only be queried\
+            \ by member of User Group that uploaded it."
+          type: boolean
     PackageData:
       description: |-
         This is a "union" type.
