@@ -20,5 +20,4 @@ app = FastAPI(
     description="API for ECE 461/Fall 2021/Project 2: A Trustworthy Module Registry",
     version="2.0.0",
 )
-
 app.include_router(DefaultApiRouter)
