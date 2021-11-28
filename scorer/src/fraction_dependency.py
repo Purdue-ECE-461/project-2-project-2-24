@@ -18,24 +18,21 @@ from time import time # pragma: no cover
 import pkg_resources # pragma: no cover
 
 def fraction_dependency(dependency_list):           
-    #installed_packages = pkg_resources.working_set
-    #installed_packages = pip.get_installed_distributions()
-    #installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+    installed_packages = pkg_resources.working_set
+    installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
 
     num_dependency = len(dependency_list)
     num_required_dependency = 0
-    
     dependency_installed_list = {}
     dependency_installed_list.update({'cloudinary-core':'2.10.9'})
     dependency_installed_list.update({'core-js':'3.6.5'})  
     dependency_installed_list.update({'lodash':'4.19.0'})  
     dependency_installed_list.update({'q':'1.6.1'}) 
-    dependency_installed_list.update({'w':'1.1.1'}) 
     
-    #for key1, value1 in dependency_list.items():
-    #    for i in installed_packages_list:
-    #        if key1 in i:
-    #            dependency_installed_list.update({i.split('==')[0]:i.split('==')[1]})
+    for key1, value1 in dependency_list.items():
+        for i in installed_packages_list:
+            if key1 == i.split('==')[0]:
+                dependency_installed_list.update({i.split('==')[0]:i.split('==')[1]})
         
     for key, value in dependency_list.items():
             if "-" in value and dependency_installed_list.get(key):

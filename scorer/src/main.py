@@ -121,6 +121,7 @@ def main(): # pragma: no cover
     print("URL NET_SCORE RAMP_UP_SCORE CORRECTNESS_SCORE BUS_FACTOR_SCORE RESPONSIVE_MAINTAINER_SCORE LICENSE_SCORE FRACTION_DEPENDENCY")
     for repo in repositories:
         repo.print_metrics()
-
+    if repo.flag_check() is True:
+        Ingestible = True
 if __name__ == "__main__":
     main() # pragma: no cover

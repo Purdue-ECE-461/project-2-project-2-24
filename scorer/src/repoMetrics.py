@@ -57,3 +57,8 @@ class Repository:
         print("%.1f" % (self.metric_scores[Repository.RESPONSIVENESS]),end=" ")
         print("%.1f" % (self.metric_scores[Repository.LICENSE]),end=" ")
         print("%.1f" % float((self.metric_scores[Repository.FRACTION_DEPENDENCY])))
+
+    def flag_check(self):
+        if round(self.metric_scores[self.RESPONSIVENESS],1) >= 0.5 and round(self.metric_scores[self.BUS_FACTOR],1) >= 0.5 and round(self.metric_scores[self.CORRECTNESS],1) >= 0.5 and round(self.metric_scores[self.RAMP_UP],1) >= 0.5 and round(self.metric_scores[self.LICENSE],1) >= 0.5 and round(float(self.metric_scores[self.FRACTION_DEPENDENCY]),1) >= 0.5:
+            return True
+        return False     

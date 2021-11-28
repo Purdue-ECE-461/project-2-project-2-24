@@ -68,9 +68,6 @@ target/
 # .JAR files
 *.jar
 
-# Environment variables
-*.env
-
 # Google credentials
 server/*.json
 
