@@ -91,7 +91,7 @@ async def delete_user_group(
     summary="Get a UserGroup",
 )
 async def get_user_group(
-    usergroupId: str = Path(None, description="A unique identifier for a UserGroup."),
+    usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
     x_authorization: str = Header(None, description=""),
 ) -> UserGroup:
     """Gets the details of a single instance of a UserGroup."""
@@ -271,7 +271,7 @@ async def registry_reset(
 async def update_user_group(
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
     x_authorization: str = Header(None, description=""),
-    user_group: UserGroup = Body(None, description="Updated &#x60;UserGroup&#x60; information."),
+    user_group: UserGroup = Body(None, description="Updated UserGroup information."),
 ) -> None:
     """Updates an existing UserGroup."""
     ...
@@ -289,5 +289,5 @@ async def user_create(
     x_authorization: str = Header(None, description=""),
     user: User = Body(None, description="New user to register."),
 ) -> User:
-    """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with Admin privileges."""
+    """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
     ...

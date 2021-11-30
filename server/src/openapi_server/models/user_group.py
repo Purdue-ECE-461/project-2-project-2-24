@@ -20,13 +20,13 @@ class UserGroup(BaseModel):
         upload: The upload of this UserGroup.
         search: The search of this UserGroup.
         download: The download of this UserGroup.
-        register: The register of this UserGroup.
+        create_user: The create_user of this UserGroup.
     """
 
     name: str
     upload: bool
     search: bool
     download: bool
-    register: bool
+    create_user: bool
 
 UserGroup.update_forward_refs()

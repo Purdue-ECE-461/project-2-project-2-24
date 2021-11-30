@@ -385,11 +385,11 @@ paths:
       summary: Create a new user
     summary: Manage individual users
   /usergroups:
-    description: The REST endpoint/path used to list and create zero or more `UserGroup`
-      entities.  This path contains a `GET` and `POST` operation to perform the list
-      and create tasks, respectively.
+    description: The REST endpoint/path used to list and create zero or more UserGroup
+      entities.  This path contains a GET and POST operation to perform the list and
+      create tasks, respectively.
     get:
-      description: Gets a list of all `UserGroup` entities.
+      description: Gets a list of all UserGroup entities.
       operationId: getUserGroups
       responses:
         "200":
@@ -399,10 +399,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/UserGroup'
                 type: array
-          description: Successful response - returns an array of `UserGroup` entities.
+          description: Successful response - returns an array of UserGroup entities.
       summary: List All UserGroups
     post:
-      description: Creates a new instance of a `UserGroup`.
+      description: Creates a new instance of a UserGroup.
       operationId: createUserGroup
       parameters:
       - explode: false
@@ -417,7 +417,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserGroup'
-        description: A new `UserGroup` to be created.
+        description: A new UserGroup to be created.
         required: true
       responses:
         "201":
@@ -426,7 +426,7 @@ paths:
     summary: Path used to manage the list of usergroups.
   /usergroups/{usergroupId}:
     delete:
-      description: Deletes an existing `UserGroup`.
+      description: Deletes an existing UserGroup.
       operationId: deleteUserGroup
       parameters:
       - description: A unique identifier for a `UserGroup`.
@@ -449,10 +449,10 @@ paths:
           description: Successful response.
       summary: Delete a UserGroup
     description: The REST endpoint/path used to get, update, and delete single instances
-      of an `UserGroup`.  This path contains `GET`, `PUT`, and `DELETE` operations
-      used to perform the get, update, and delete tasks, respectively.
+      of an UserGroup.  This path contains GET, PUT, and DELETE operations used to
+      perform the get, update, and delete tasks, respectively.
     get:
-      description: Gets the details of a single instance of a `UserGroup`.
+      description: Gets the details of a single instance of a UserGroup.
       operationId: getUserGroup
       parameters:
       - description: A unique identifier for a `UserGroup`.
@@ -476,10 +476,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserGroup'
-          description: Successful response - returns a single `UserGroup`.
+          description: Successful response - returns a single UserGroup.
       summary: Get a UserGroup
     put:
-      description: Updates an existing `UserGroup`.
+      description: Updates an existing UserGroup.
       operationId: updateUserGroup
       parameters:
       - description: A unique identifier for a `UserGroup`.
@@ -502,7 +502,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserGroup'
-        description: Updated `UserGroup` information.
+        description: Updated UserGroup information.
         required: true
       responses:
         "202":
@@ -859,12 +859,12 @@ components:
           type: boolean
         download:
           type: boolean
-        register:
+        create_user:
           type: boolean
       required:
+      - create_user
       - download
       - name
-      - register
       - search
       - upload
       title: Root Type for UserGroup
