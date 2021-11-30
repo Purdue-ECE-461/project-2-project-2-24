@@ -30,8 +30,8 @@
         "mode": "REQUIRED"
     },
     {
-        "description": "Register (new users) permission",
-        "name": "register",
+        "description": "Create new users permission",
+        "name": "create_user",
         "type": "BOOLEAN",
         "mode": "REQUIRED"
     }

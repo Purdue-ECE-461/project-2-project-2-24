@@ -10,6 +10,7 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
+from openapi_server.database.tables import *
 import os
 import hashlib
 import time
