@@ -157,7 +157,7 @@ def test_package_create(client: TestClient):
     package = {"metadata":{"secret":1,"version":"1.2.3","sensitive":1,"id":"ID","name":"Name"},"data":{"content":"Content","js_program":"JSProgram","url":"URL"}}
 
     headers = {
-        "x_authorization": 'x_authorization_example',
+        "x_authorization": 'default_token',
     }
     response = client.request(
         "POST",

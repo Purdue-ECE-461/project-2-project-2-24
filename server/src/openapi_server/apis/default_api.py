@@ -36,6 +36,16 @@ db = Database()
 def token_from_auth(auth):
     return auth.split()[-1]
 
+
+def get_user_and_group_from_token(token) -> (User, UserGroup):
+    user_info = db.get_user_and_group_from_token(token)
+    if isinstance(user_info, Error):
+        return user_info
+    user = user_info["user"]
+    user_group = user_info["user_group"]
+    return user, user_group
+
+
 @router.put(
     "/authenticate",
     responses={
@@ -159,7 +169,10 @@ async def package_create(
     x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
-    metadata = db.upload_package(token_from_auth(x_authorization), package)
+    user, user_group = get_user_and_group_from_token(token_from_auth(x_authorization))
+    if not user_group.upload:
+        return Error(code=401, message="Not authorized to upload a package!")
+    metadata = db.upload_package(user, package)
     return metadata
 
 
@@ -226,7 +239,11 @@ async def package_update(
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
-    ...
+    success = db.update_package(token_from_auth(x_authorization), id, package)
+    if success:
+        return {"description": "Success."}
+    else:
+        return Error(code=400, message="Malformed request!")
 
 
 @router.post(

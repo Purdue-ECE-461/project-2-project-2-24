@@ -10,6 +10,7 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
+from openapi_server.models.user import User
 
 from openapi_server.database import utils
 
@@ -33,6 +34,11 @@ class Database:
 
             # Get tables
             self.tables = self.client.list_tables(self.dataset)
+
+            # Ensure proper initial state
+            results = self.initialize()
+            if isinstance(results, Error):
+                raise KeyError(results.message)
 
         except KeyError as err:
             print("Cannot initialize Database!!!")
@@ -71,6 +77,8 @@ class Database:
         if upload_user_id is None:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
+        # TODO: Make sure user is authenticated to perform task BEFORE doing trying to do anything in this whole file?
+
         # TODO: Implement sensitive and secret flags
         sensitive = True
         secret = True
@@ -99,7 +107,7 @@ class Database:
     # Params:
     # auth: token (string)
     # package: package (models/Package)
-    def upload_package(self, token, package):
+    def upload_package(self, user, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
@@ -119,7 +127,7 @@ class Database:
         metadata.id = package_id
 
         # Get user id
-        upload_user_id = self.get_user_id_from_token(token)
+        upload_user_id = user.id
         if upload_user_id is None:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
@@ -256,12 +264,44 @@ class Database:
         else:
             return None
 
+    def get_user_and_group_from_token(self, token):
+        # Hash token
+        hashed_token = utils.db_hash(token)
+
+        user_query = f"""
+            WITH user_id_query AS (
+                SELECT user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+                WHERE hash_token = "{hashed_token}"
+            )
+            
+            SELECT user_id_query.user_id, users.id, users.username, users.hash_pass, users.user_group_id FROM user_id_query, {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users users
+            WHERE users.id = user_id_query.user_id
+        """
+
+        user_query_results = self.execute_query(user_query)
+        if isinstance(user_query_results, Error):
+            return user_query_results
+        elif len(user_query_results) == 1:
+            user_query_dict = dict(user_query_results[0].items())
+            user = User(
+                name=user_query_dict["username"],
+                is_admin=(user_query_dict["user_group_id"] == 1),
+                user_authentication_info=UserAuthenticationInfo(),
+                user_group=
+            )
+            print(user_query_dict)
+        else:
+            return Error(code=500, message="Could not find user for token!")
+        print(user_query_results)
+
+
     # ________________________________________________________________________________________________________________
     #                                                USER GROUPS
     # ________________________________________________________________________________________________________________
 
     def create_new_user_group(self, token, user_group):
-        # Is user allowed to create a new user?
+        # Is user allowed to create a new UserGroup?
+        user = self.get
         if not user.is_admin:
             return Error(code=401, message="Must be admin to create new user")
 
@@ -307,7 +347,7 @@ class Database:
     #                                                   USERS
     # ________________________________________________________________________________________________________________
 
-    def create_new_user(self, user, new_user, password, user_group):
+    def create_new_user(self, user, new_user, password, user_group_name):
         # Is user allowed to create a new user?
         if not user.is_admin:
             return Error(code=401, message="Must be admin to create new user")
@@ -322,7 +362,7 @@ class Database:
         new_user_password_hash = utils.db_hash(password)
 
         # Get user group id
-        user_group_id = self.get_user_group_id(user_group)
+        user_group_id = self.get_user_group_id(user_group_name)
         if user_group_id is None:
             return Error(code=400, message="Cannot find user group with provided name! User not created!")
 
@@ -354,6 +394,65 @@ class Database:
     # ________________________________________________________________________________________________________________
     #                                                   COMMON
     # ________________________________________________________________________________________________________________
+
+    def initialize(self):
+        # Initialize query
+        query = f""
+
+        # First add default user group
+        query += f"""
+                    INSERT INTO ece-461-proj-2-24.module_registry.user_groups (id, name, upload, search, download, create_user)
+                    SELECT new_id, new_Name, new_upload, new_search, new_download, new_create_user FROM (SELECT 1 AS new_id, "Admins" AS new_name, TRUE AS new_upload, TRUE AS new_search, TRUE AS new_download, TRUE AS new_create_user)
+                    LEFT JOIN ece-461-proj-2-24.module_registry.user_groups
+                    ON id = new_id
+                    WHERE id IS NULL;
+                """
+
+        # Add default user
+        query += f"""
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
+                    SELECT new_id, new_username, new_hash_pass, new_user_group_id FROM (SELECT 1 AS new_id, "ece461defaultadminuser" AS new_username, "{utils.db_hash("correcthorsebatterystaple123(!__+@**(A")}" AS new_hash_pass, 1 AS new_user_group_id)
+                    LEFT JOIN {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users
+                    ON id = new_id
+                    WHERE id IS NULL;
+                """
+
+        # Add default token (for testing)
+        query += f"""
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens (id, hash_token, created, interactions, user_id)
+                    SELECT new_id, new_hash_token, new_created, new_interactions, new_user_id FROM (SELECT 1 AS new_id, "{utils.db_hash("default_token")}" AS new_hash_token, CURRENT_TIMESTAMP() AS new_created, {MAX_TOKEN_USES} AS new_interactions, 1 AS new_user_id)
+                    LEFT JOIN {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+                    ON id = new_id
+                    WHERE id IS NULL;
+                """
+
+        # Execute query
+        return self.execute_query(query)
+
+    def reset_registry(self, token):
+        # First clear all tables
+        query = f"""
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.history WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups WHERE TRUE;
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users WHERE TRUE;
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+
+        # Now initialize the database
+        results = self.initialize()
+
+        if isinstance(results, Error):
+            return results
+        else:
+            return "Successfully reset registry!"
 
     def gen_new_integer_id(self, table):
         query = f"""
