@@ -45,6 +45,6 @@
         "description": "Base64 encoded contents of zipped package",
         "name": "zip",
         "type": "STRING",
-        "mode": "REQUIRED"
+        "mode": "NULLABLE"
     }
 ]
