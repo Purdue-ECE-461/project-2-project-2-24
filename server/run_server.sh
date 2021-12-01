@@ -33,8 +33,7 @@ elif [[ $1 == "clean" ]]; then
     rm -r src/openapi_server/__pycache__
     rm -r .pytest_cache
     rm -r venv
-    rm -r build
-    rm -r openapi_server.egg-info
+    rm -r src/openapi_server.egg-info
 else
     echo "Invalid command line argument"
     echo "Use the '-help' option to see options!"

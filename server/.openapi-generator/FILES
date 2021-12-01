@@ -23,6 +23,7 @@ src/openapi_server/models/package_query.py
 src/openapi_server/models/package_rating.py
 src/openapi_server/models/user.py
 src/openapi_server/models/user_authentication_info.py
+src/openapi_server/models/user_group.py
 src/openapi_server/security_api.py
 tests/conftest.py
 tests/test_default_api.py
