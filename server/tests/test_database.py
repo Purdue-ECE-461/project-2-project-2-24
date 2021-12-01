@@ -29,7 +29,7 @@ def test_create_new_user(user):
     print("\nTESTING: Create new user")
     print()
     results = db.create_new_user(user, user, "password", 1)
-    print("Created new user: ", results)
+    print("Created new user:", results)
     assert not isinstance(results, Error)
 
 
@@ -37,7 +37,7 @@ def test_create_new_token(auth_request):
     print("\nTESTING: Create new token")
     print()
     created_token = db.create_new_token(auth_request)
-    print("New token: " + created_token)
+    print("New token:", created_token)
     assert isinstance(created_token, str)
 
 

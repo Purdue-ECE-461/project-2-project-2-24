@@ -33,7 +33,7 @@ def user() -> User:
 
 @pytest.fixture
 def user_group() -> UserGroup:
-    return UserGroup(name="Admin", upload=True, search=True, download=True, register=True)
+    return UserGroup(name="Admin", upload=True, search=True, download=True, create_user=True)
 
 
 @pytest.fixture

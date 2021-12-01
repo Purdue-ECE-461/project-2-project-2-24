@@ -32,7 +32,7 @@ class Database:
             self.dataset = self.client.get_dataset(os.environ["BIGQUERY_DATASET"])
 
             # Get tables
-            self.tables = dict(self.client.list_tables(self.dataset))
+            self.tables = self.client.list_tables(self.dataset)
 
         except KeyError as err:
             print("Cannot initialize Database!!!")
@@ -172,6 +172,8 @@ class Database:
     def create_new_token(self, auth_request):
 
         user_id = self.get_user_id(auth_request.user.name)
+        if user_id is None:
+            return Error(code=500, message="Could not find User ID of provided User!")
         new_token_id = self.gen_new_integer_id("tokens")
         new_token = utils.db_hash(str(round(time.time() * 1000)))
         new_token_hash = utils.db_hash(new_token)
