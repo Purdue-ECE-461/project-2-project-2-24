@@ -111,10 +111,10 @@ class Database:
         else:
             return metadata
 
-    def package_id_exists(self, id):
+    def package_id_exists(self, package_id):
         # Generate query
         query = f"""
-            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE id = "{id}"
+            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE id = "{package_id}"
         """
 
         results = self.execute_query(query)

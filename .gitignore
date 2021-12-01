@@ -74,3 +74,7 @@ server/*.json
 # Server test output
 server/test_output.txt
 
+# .env files
+server/.env
+server/src/openapi_server/.env
+
