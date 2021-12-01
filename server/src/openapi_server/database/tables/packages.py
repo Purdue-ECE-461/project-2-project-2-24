@@ -1,11 +1,8 @@
 import os
 from openapi_server.models.error import Error
 
-class Packages():
-    def __init__(self, db):
-        self.db = db
 
-    def package_exists(self, name, version):
+def package_exists(self, name, version):
         # Generate query
         query = f"""
             SELECT name, version from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{os.environ["BIGQUERY_DATASET"]}.packages 

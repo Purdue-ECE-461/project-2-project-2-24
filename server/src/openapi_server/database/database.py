@@ -10,17 +10,25 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
-from openapi_server.database.tables import *
+
+from openapi_server.database.tables import history
+from openapi_server.database.tables import packages
+from openapi_server.database.tables import ratings
+from openapi_server.database.tables import scripts
+from openapi_server.database.tables import tokens
+from openapi_server.database.tables import user_groups
+from openapi_server.database.tables import users
+
 import os
 import hashlib
 import time
-
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
 MAX_TOKEN_USES = 1000
 
-class Database():
+
+class Database:
     def __init__(self):
         # Initialize client
         try:
@@ -30,28 +38,14 @@ class Database():
             self.dataset = self.client.get_dataset(os.environ["BIGQUERY_DATASET"])
 
             # Get tables
-            self.tables = self.client.list_tables(self.dataset)
+            self.tables = dict(self.client.list_tables(self.dataset))
+
         except KeyError as err:
             print("Cannot initialize Database!!!")
             print(err)
 
-    def hash(self, content):
-        return hashlib.sha256(content.encode()).hexdigest()
-
     def create_new_token(self, auth_request):
-        # TODO: Confirm user password is valid
-
-        user_id = self.get_user_id(auth_request.user.name)
-        new_token_id = self.gen_new_integer_id("tokens")
-        new_token = self.hash(str(round(time.time() * 1000)))
-        new_token_hash = self.hash(new_token)
-
-        query = f"""
-            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens (id, hash_token, created, interactions, user_id)
-            VALUES ({new_token_id}, "{new_token_hash}", CURRENT_TIMESTAMP(), {MAX_TOKEN_USES}, {user_id})
-        """
-
-        results = self.execute_query(query)
+        results, new_token = self.execute_query(tokens.new_token_query(auth_request))
 
         if isinstance(results, Error):
             return results
@@ -59,7 +53,7 @@ class Database():
             return new_token
 
     def get_user_id_from_token(self, token):
-        hashed_token = self.hash(token)
+        hashed_token = db_hash(token)
 
         query = f"""
             SELECT user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens WHERE hash_token = "{hashed_token}"
@@ -170,7 +164,7 @@ class Database():
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = self.hash(password)
+        new_user_password_hash = db_hash(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)
@@ -199,7 +193,7 @@ class Database():
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = self.hash(password)
+        new_user_password_hash = db_hash(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)

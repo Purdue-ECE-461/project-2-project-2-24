@@ -26,6 +26,7 @@ from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 from openapi_server.models.user import User
 from openapi_server.models.user_group import UserGroup
+from openapi_server.database.database import Database
 
 
 router = APIRouter()
@@ -59,7 +60,7 @@ async def create_auth_token(
     summary="Create a UserGroup",
 )
 async def create_user_group(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     user_group: UserGroup = Body(None, description="A new UserGroup to be created."),
 ) -> None:
     """Creates a new instance of a UserGroup."""
@@ -76,7 +77,7 @@ async def create_user_group(
 )
 async def delete_user_group(
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """Deletes an existing UserGroup."""
     ...
@@ -92,7 +93,7 @@ async def delete_user_group(
 )
 async def get_user_group(
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> UserGroup:
     """Gets the details of a single instance of a UserGroup."""
     ...
@@ -123,7 +124,7 @@ async def get_user_groups(
 )
 async def package_by_name_delete(
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
 
@@ -139,7 +140,7 @@ async def package_by_name_delete(
 )
 async def package_by_name_get(
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> List[PackageHistoryEntry]:
     """Return the history of this package (all versions)."""
     ...
@@ -155,7 +156,7 @@ async def package_by_name_get(
     tags=["default"],
 )
 async def package_create(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
     metadata = db.upload_package(token_from_auth(x_authorization), package)
@@ -173,7 +174,7 @@ async def package_create(
 )
 async def package_delete(
     id: str = Path(None, description="Package ID"),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
 
@@ -189,7 +190,7 @@ async def package_delete(
 )
 async def package_rate(
     id: str = Path(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> PackageRating:
     ...
 
@@ -204,7 +205,7 @@ async def package_rate(
 )
 async def package_retrieve(
     id: str = Path(None, description="ID of package to fetch"),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> Package:
     """Return this package."""
     ...
@@ -222,7 +223,7 @@ async def package_retrieve(
 async def package_update(
     id: str = Path(None, description=""),
     package: Package = Body(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
     ...
@@ -239,7 +240,7 @@ async def package_update(
 )
 async def packages_list(
     package_query: List[PackageQuery] = Body(None, description=""),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
@@ -255,7 +256,7 @@ async def packages_list(
     tags=["default"],
 )
 async def registry_reset(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     ...
 
@@ -270,7 +271,7 @@ async def registry_reset(
 )
 async def update_user_group(
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     user_group: UserGroup = Body(None, description="Updated UserGroup information."),
 ) -> None:
     """Updates an existing UserGroup."""
@@ -286,7 +287,7 @@ async def update_user_group(
     summary="Create a new user",
 )
 async def user_create(
-    x_authorization: str = Header(None, description=""),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
     user: User = Body(None, description="New user to register."),
 ) -> User:
     """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
