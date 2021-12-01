@@ -1,0 +1,56 @@
+[
+    {
+        "description": "ID of rating",
+        "name": "id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "ID of package rated",
+        "name": "package_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Net score",
+        "name": "net",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Ramp-up score",
+        "name": "ramp_up",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Correctness score",
+        "name": "correctness",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Bus factor score",
+        "name": "bus_factor",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Responsive maintainer score",
+        "name": "maintainer",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "License score",
+        "name": "license",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Dependency version pinning score",
+        "name": "dependency",
+        "type": "FLOAT",
+        "mode": "REQUIRED"
+    }
+]

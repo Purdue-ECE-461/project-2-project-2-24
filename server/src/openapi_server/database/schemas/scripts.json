@@ -1,0 +1,20 @@
+[
+    {
+        "description": "ID of script",
+        "name": "id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "ID of associated sensitive package",
+        "name": "package_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "description": "Contents of the script",
+        "name": "script",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    }
+]

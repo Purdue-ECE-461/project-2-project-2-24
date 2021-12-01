@@ -11,13 +11,7 @@ from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 
-from openapi_server.database.tables import history
-from openapi_server.database.tables import packages
-from openapi_server.database.tables import ratings
-from openapi_server.database.tables import scripts
-from openapi_server.database.tables import tokens
-from openapi_server.database.tables import user_groups
-from openapi_server.database.tables import users
+from openapi_server.database import utils
 
 import os
 import hashlib
@@ -45,7 +39,18 @@ class Database:
             print(err)
 
     def create_new_token(self, auth_request):
-        results, new_token = self.execute_query(tokens.new_token_query(auth_request))
+
+        user_id = self.get_user_id(auth_request.user.name)
+        new_token_id = self.gen_new_integer_id("tokens")
+        new_token = utils.db_hash(str(round(time.time() * 1000)))
+        new_token_hash = utils.db_hash(new_token)
+
+        query = f"""
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens (id, hash_token, created, interactions, user_id)
+            VALUES ({new_token_id}, "{new_token_hash}", CURRENT_TIMESTAMP(), {MAX_TOKEN_USES}, {user_id})
+        """
+
+        results = self.execute_query(query)
 
         if isinstance(results, Error):
             return results
@@ -53,7 +58,7 @@ class Database:
             return new_token
 
     def get_user_id_from_token(self, token):
-        hashed_token = db_hash(token)
+        hashed_token = utils.db_hash(token)
 
         query = f"""
             SELECT user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens WHERE hash_token = "{hashed_token}"
@@ -164,7 +169,7 @@ class Database:
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = db_hash(password)
+        new_user_password_hash = utils.db_hash(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)
@@ -193,7 +198,7 @@ class Database:
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = db_hash(password)
+        new_user_password_hash = utils.db_hash(password)
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group)
