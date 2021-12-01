@@ -7,6 +7,8 @@ import re  # noqa: F401
 from typing import Any, Dict, List, Optional  # noqa: F401
 
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
+from openapi_server.models.user_authentication_info import UserAuthenticationInfo
+from openapi_server.models.user_group import UserGroup
 
 
 class User(BaseModel):
@@ -18,9 +20,13 @@ class User(BaseModel):
 
         name: The name of this User.
         is_admin: The is_admin of this User.
+        user_authentication_info: The user_authentication_info of this User [Optional].
+        user_group: The user_group of this User [Optional].
     """
 
     name: str
     is_admin: bool
+    user_authentication_info: Optional[UserAuthenticationInfo] = None
+    user_group: Optional[UserGroup] = None
 
 User.update_forward_refs()

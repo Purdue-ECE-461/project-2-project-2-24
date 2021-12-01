@@ -19,10 +19,14 @@ class PackageMetadata(BaseModel):
         name: The name of this PackageMetadata.
         version: The version of this PackageMetadata.
         id: The id of this PackageMetadata.
+        sensitive: The sensitive of this PackageMetadata [Optional].
+        secret: The secret of this PackageMetadata [Optional].
     """
 
     name: str
     version: str
     id: str
+    sensitive: Optional[bool] = None
+    secret: Optional[bool] = None
 
 PackageMetadata.update_forward_refs()

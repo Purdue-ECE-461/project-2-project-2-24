@@ -1,15 +1,16 @@
 openapi: 3.0.2
 info:
   contact:
-    email: davisjam@purdue.edu
-    name: Prof. Davis
-    url: http://davisjam.github.io
-  description: 'API for ECE 461/Fall 2021/Project 2: A Trustworthy Module Registry'
+    email: gonza487@purdue.edu
+    name: Aiden Gonzalez
+    url: https://aidengonzalez.dev
+  description: 'Expanded API for ECE 461/Fall 2021/Project 2/Team 24: A Trustworthy
+    Module Registry'
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: ECE 461 - Fall 2021 - Project 2
+  title: ECE 461 - Fall 2021 - Project 2 - Team 24
   version: 2.0.0
 servers:
 - url: /
@@ -223,10 +224,10 @@ paths:
                 $ref: '#/components/schemas/PackageMetadata'
           description: Success. Check the ID in the returned metadata for the official
             ID.
-        "403":
-          description: Package exists already.
         "400":
           description: Malformed request.
+        "403":
+          description: Package exists already.
     summary: Create a version of a package
   /package/{id}/rate:
     get:
@@ -352,6 +353,162 @@ paths:
         "400":
           description: No such package.
     summary: Interact with the package with this name
+  /user:
+    post:
+      description: |-
+        Create a new registered user.
+        Pass in User in body, and AuthorizationToken in header.
+        AuthorizationToken must belong to user with "Admin" privileges.
+      operationId: UserCreate
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: New user to register.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: User successfully created.
+      summary: Create a new user
+    summary: Manage individual users
+  /usergroups:
+    description: The REST endpoint/path used to list and create zero or more UserGroup
+      entities.  This path contains a GET and POST operation to perform the list and
+      create tasks, respectively.
+    get:
+      description: Gets a list of all UserGroup entities.
+      operationId: getUserGroups
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserGroup'
+                type: array
+          description: Successful response - returns an array of UserGroup entities.
+      summary: List All UserGroups
+    post:
+      description: Creates a new instance of a UserGroup.
+      operationId: createUserGroup
+      parameters:
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserGroup'
+        description: A new UserGroup to be created.
+        required: true
+      responses:
+        "201":
+          description: Successful response.
+      summary: Create a UserGroup
+    summary: Path used to manage the list of usergroups.
+  /usergroups/{usergroupId}:
+    delete:
+      description: Deletes an existing UserGroup.
+      operationId: deleteUserGroup
+      parameters:
+      - description: A unique identifier for a `UserGroup`.
+        explode: false
+        in: path
+        name: usergroupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      responses:
+        "204":
+          description: Successful response.
+      summary: Delete a UserGroup
+    description: The REST endpoint/path used to get, update, and delete single instances
+      of an UserGroup.  This path contains GET, PUT, and DELETE operations used to
+      perform the get, update, and delete tasks, respectively.
+    get:
+      description: Gets the details of a single instance of a UserGroup.
+      operationId: getUserGroup
+      parameters:
+      - description: A unique identifier for a `UserGroup`.
+        explode: false
+        in: path
+        name: usergroupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroup'
+          description: Successful response - returns a single UserGroup.
+      summary: Get a UserGroup
+    put:
+      description: Updates an existing UserGroup.
+      operationId: updateUserGroup
+      parameters:
+      - description: A unique identifier for a `UserGroup`.
+        explode: false
+        in: path
+        name: usergroupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-Authorization
+        required: true
+        schema:
+          $ref: '#/components/schemas/AuthenticationToken'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserGroup'
+        description: Updated UserGroup information.
+        required: true
+      responses:
+        "202":
+          description: Successful response.
+      summary: Update a UserGroup
+    summary: Path used to manage a single UserGroup.
 components:
   schemas:
     Error:
@@ -370,7 +527,9 @@ components:
     Package:
       example:
         metadata:
+          Secret: true
           Version: 1.2.3
+          Sensitive: true
           ID: ID
           Name: Name
         data:
@@ -393,7 +552,9 @@ components:
 
         The "ID" is used as an internal identifier for interacting with existing packages.
       example:
+        Secret: true
         Version: 1.2.3
+        Sensitive: true
         ID: ID
         Name: Name
       properties:
@@ -413,6 +574,16 @@ components:
         ID:
           title: PackageID
           type: string
+        Sensitive:
+          description: Sensitivity of package.  If True, js_program must be run before
+            allowing download of the package.
+          title: Sensitive
+          type: boolean
+        Secret:
+          description: Secrecy of package.  If True, package can only be queried by
+            member of User Group that uploaded it.
+          title: Secret
+          type: boolean
       required:
       - ID
       - Name
@@ -453,6 +624,14 @@ components:
       example:
         name: Alfalfa
         isAdmin: true
+        UserAuthenticationInfo:
+          password: password
+        UserGroup:
+          name: Admins
+          upload: true
+          search: true
+          download: true
+          register: true
       properties:
         name:
           example: Alfalfa
@@ -462,6 +641,10 @@ components:
           description: Is this user an admin?
           title: isAdmin
           type: boolean
+        UserAuthenticationInfo:
+          $ref: '#/components/schemas/UserAuthenticationInfo'
+        UserGroup:
+          $ref: '#/components/schemas/UserGroup'
       required:
       - isAdmin
       - name
@@ -542,8 +725,18 @@ components:
         User:
           name: Alfalfa
           isAdmin: true
+          UserAuthenticationInfo:
+            password: password
+          UserGroup:
+            name: Admins
+            upload: true
+            search: true
+            download: true
+            register: true
         PackageMetadata:
+          Secret: true
           Version: 1.2.3
+          Sensitive: true
           ID: ID
           Name: Name
         Date: 2000-01-23T04:56:07.000+00:00
@@ -591,6 +784,14 @@ components:
         User:
           name: Alfalfa
           isAdmin: true
+          UserAuthenticationInfo:
+            password: password
+          UserGroup:
+            name: Admins
+            upload: true
+            search: true
+            download: true
+            register: true
       properties:
         User:
           $ref: '#/components/schemas/User'
@@ -641,6 +842,33 @@ components:
       description: Offset in pagination.
       example: "1"
       type: string
+    UserGroup:
+      description: Group of users with defined permissions
+      example:
+        name: Admins
+        upload: true
+        search: true
+        download: true
+        register: true
+      properties:
+        name:
+          type: string
+        upload:
+          type: boolean
+        search:
+          type: boolean
+        download:
+          type: boolean
+        create_user:
+          type: boolean
+      required:
+      - create_user
+      - download
+      - name
+      - search
+      - upload
+      title: Root Type for UserGroup
+      type: object
   securitySchemes:
     UserAndPasswordYieldsToken:
       description: Use the /authentication endpoint to obtain an authorization token.
