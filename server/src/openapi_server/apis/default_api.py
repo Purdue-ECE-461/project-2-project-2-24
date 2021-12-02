@@ -24,8 +24,10 @@ from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
-
+from openapi_server.models.user import User
+from openapi_server.models.user_group import UserGroup
 from openapi_server.database.database import Database
+
 
 router = APIRouter()
 db = Database()
@@ -45,9 +47,75 @@ def token_from_auth(auth):
     tags=["default"],
 )
 async def create_auth_token(
+    response: Response,
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
-    return db.create_new_token(authentication_request)
+    new_token = db.create_new_token(authentication_request)
+    if isinstance(new_token, Error):
+        response.status_code = new_token.code
+    return new_token
+
+
+@router.post(
+    "/usergroups",
+    responses={
+        201: {"description": "Successful response."},
+    },
+    tags=["default"],
+    summary="Create a UserGroup",
+)
+async def create_user_group(
+    x_authorization: str = Header(None, description="", convert_underscores=False),
+    user_group: UserGroup = Body(None, description="A new UserGroup to be created."),
+) -> None:
+    """Creates a new instance of a UserGroup."""
+    ...
+
+
+@router.delete(
+    "/usergroups/{usergroupId}",
+    responses={
+        204: {"description": "Successful response."},
+    },
+    tags=["default"],
+    summary="Delete a UserGroup",
+)
+async def delete_user_group(
+    usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
+) -> None:
+    """Deletes an existing UserGroup."""
+    ...
+
+
+@router.get(
+    "/usergroups/{usergroupId}",
+    responses={
+        200: {"model": UserGroup, "description": "Successful response - returns a single UserGroup."},
+    },
+    tags=["default"],
+    summary="Get a UserGroup",
+)
+async def get_user_group(
+    usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
+) -> UserGroup:
+    """Gets the details of a single instance of a UserGroup."""
+    ...
+
+
+@router.get(
+    "/usergroups",
+    responses={
+        200: {"model": List[UserGroup], "description": "Successful response - returns an array of UserGroup entities."},
+    },
+    tags=["default"],
+    summary="List All UserGroups",
+)
+async def get_user_groups(
+) -> List[UserGroup]:
+    """Gets a list of all UserGroup entities."""
+    ...
 
 
 @router.delete(
@@ -82,20 +150,34 @@ async def package_by_name_get(
     """Return the history of this package (all versions)."""
     ...
 
+
 @router.post(
     "/package",
     responses={
         201: {"model": PackageMetadata, "description": "Success. Check the ID in the returned metadata for the official ID."},
-        403: {"description": "Package exists already."},
         400: {"description": "Malformed request."},
+        403: {"description": "Package exists already."},
     },
     tags=["default"],
+    # Default status code:
+    status_code=201
 )
 async def package_create(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
-    metadata = db.upload_package(token_from_auth(x_authorization), package)
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to upload a package!")
+        response.status_code = err.code
+        return err
+    metadata = db.upload_package(user, package)
+    if isinstance(metadata, Error):
+        response.status_code = metadata.code
     return metadata
 
 
@@ -157,12 +239,24 @@ async def package_retrieve(
     summary="Update this version of the package.",
 )
 async def package_update(
+    response: Response,
     id: str = Path(None, description=""),
     package: Package = Body(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
-    ...
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to update a package!")
+        response.status_code = err.code
+        return err
+    results = db.update_package(user, id, package)
+    if isinstance(results, Error):
+        response.status_code = results.code
+    return results
 
 
 @router.post(
@@ -192,6 +286,51 @@ async def packages_list(
     tags=["default"],
 )
 async def registry_reset(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.create_user:
+        err = Error(code=401, message="Not authorized to reset the registry!")
+        response.status_code = err.code
+        return err
+    reset = db.reset_registry()
+    if isinstance(reset, Error):
+        response.status_code = reset.code
+    return reset
+
+
+@router.put(
+    "/usergroups/{usergroupId}",
+    responses={
+        202: {"description": "Successful response."},
+    },
+    tags=["default"],
+    summary="Update a UserGroup",
+)
+async def update_user_group(
+    usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
+    x_authorization: str = Header(None, description="", convert_underscores=False),
+    user_group: UserGroup = Body(None, description="Updated UserGroup information."),
+) -> None:
+    """Updates an existing UserGroup."""
+    ...
+
+
+@router.post(
+    "/user",
+    responses={
+        200: {"model": User, "description": "User successfully created."},
+    },
+    tags=["default"],
+    summary="Create a new user",
+)
+async def user_create(
+    x_authorization: str = Header(None, description="", convert_underscores=False),
+    user: User = Body(None, description="New user to register."),
+) -> User:
+    """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
     ...

@@ -346,9 +346,9 @@ paths:
       required: true
   /usergroups:
     summary: Path used to manage the list of usergroups.
-    description: "The REST endpoint/path used to list and create zero or more `UserGroup`\
-      \ entities.  This path contains a `GET` and `POST` operation to perform the\
-      \ list and create tasks, respectively."
+    description: "The REST endpoint/path used to list and create zero or more UserGroup\
+      \ entities.  This path contains a GET and POST operation to perform the list\
+      \ and create tasks, respectively."
     get:
       responses:
         "200":
@@ -358,13 +358,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserGroup'
-          description: Successful response - returns an array of `UserGroup` entities.
+          description: Successful response - returns an array of UserGroup entities.
       operationId: getUserGroups
       summary: List All UserGroups
-      description: Gets a list of all `UserGroup` entities.
+      description: Gets a list of all UserGroup entities.
     post:
       requestBody:
-        description: A new `UserGroup` to be created.
+        description: A new UserGroup to be created.
         content:
           application/json:
             schema:
@@ -382,12 +382,12 @@ paths:
           description: Successful response.
       operationId: createUserGroup
       summary: Create a UserGroup
-      description: Creates a new instance of a `UserGroup`.
+      description: Creates a new instance of a UserGroup.
   /usergroups/{usergroupId}:
     summary: Path used to manage a single UserGroup.
     description: "The REST endpoint/path used to get, update, and delete single instances\
-      \ of an `UserGroup`.  This path contains `GET`, `PUT`, and `DELETE` operations\
-      \ used to perform the get, update, and delete tasks, respectively."
+      \ of an UserGroup.  This path contains GET, PUT, and DELETE operations used\
+      \ to perform the get, update, and delete tasks, respectively."
     get:
       responses:
         "200":
@@ -395,13 +395,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserGroup'
-          description: Successful response - returns a single `UserGroup`.
+          description: Successful response - returns a single UserGroup.
       operationId: getUserGroup
       summary: Get a UserGroup
-      description: Gets the details of a single instance of a `UserGroup`.
+      description: Gets the details of a single instance of a UserGroup.
     put:
       requestBody:
-        description: Updated `UserGroup` information.
+        description: Updated UserGroup information.
         content:
           application/json:
             schema:
@@ -412,14 +412,14 @@ paths:
           description: Successful response.
       operationId: updateUserGroup
       summary: Update a UserGroup
-      description: Updates an existing `UserGroup`.
+      description: Updates an existing UserGroup.
     delete:
       responses:
         "204":
           description: Successful response.
       operationId: deleteUserGroup
       summary: Delete a UserGroup
-      description: Deletes an existing `UserGroup`.
+      description: Deletes an existing UserGroup.
     parameters:
     - name: usergroupId
       description: A unique identifier for a `UserGroup`.
@@ -531,6 +531,9 @@ components:
         UserGroup:
           $ref: '#/components/schemas/UserGroup'
           description: Group user belongs to.
+        id:
+          $ref: '#/components/schemas/UserID'
+          description: ID of User in database
     UserAuthenticationInfo:
       description: Authentication info for a user
       required:
@@ -667,7 +670,7 @@ components:
       required:
       - download
       - name
-      - register
+      - create_user
       - search
       - upload
       type: object
@@ -680,14 +683,29 @@ components:
           type: boolean
         download:
           type: boolean
-        register:
+        create_user:
           type: boolean
+        id:
+          $ref: '#/components/schemas/UserGroupID'
+          description: ID of UserGroup in database
       example:
         name: Admins
         upload: true
         search: true
         download: true
         register: true
+    UserID:
+      format: int32
+      title: Root Type for UserID
+      description: ID of User
+      type: integer
+      example: 1
+    UserGroupID:
+      format: int32
+      title: Root Type for UserGroupID
+      description: ID of UserGroup
+      type: integer
+      example: 1
   securitySchemes:
     UserAndPasswordYieldsToken:
       type: apiKey

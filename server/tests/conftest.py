@@ -7,8 +7,11 @@ from openapi_server.models.package import Package
 from openapi_server.models.package_data import PackageData
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.user import User
+from openapi_server.models.user_group import UserGroup
 from openapi_server.models.user_authentication_info import UserAuthenticationInfo
 from openapi_server.models.authentication_request import AuthenticationRequest
+
+from openapi_server.database import utils
 
 from openapi_server.main import app as application
 
@@ -26,23 +29,63 @@ def client(app) -> TestClient:
 
 
 @pytest.fixture
-def user() -> User:
-    return User(name="Aiden", is_admin=True)
+def default_user_authentication_info() -> UserAuthenticationInfo:
+    return UserAuthenticationInfo(password="correcthorsebatterystaple123(!__+@**(A")
 
 
 @pytest.fixture
-def username(user) -> str:
-    return user.name
+def new_user_authentication_info() -> UserAuthenticationInfo:
+    return UserAuthenticationInfo(password="new_user_password")
 
 
 @pytest.fixture
-def user_auth() -> UserAuthenticationInfo:
-    return UserAuthenticationInfo(password="password")
+def new_user_password(new_user_authentication_info) -> str:
+    return new_user_authentication_info.password
 
 
 @pytest.fixture
-def auth_request(user, user_auth) -> AuthenticationRequest:
-    return AuthenticationRequest(user=user, secret=user_auth)
+def admin_user_group() -> UserGroup:
+    return UserGroup(name="Admin", upload=True, search=True, download=True, create_user=True)
+
+
+@pytest.fixture
+def default_user(default_user_authentication_info, admin_user_group) -> User:
+    return User(
+        name="ece461defaultadminuser",
+        is_admin=True,
+        user_authentication_info=default_user_authentication_info,
+        user_group=admin_user_group
+    )
+
+
+@pytest.fixture
+def new_user(new_user_authentication_info, admin_user_group) -> User:
+    return User(
+        name="Aiden",
+        is_admin=True,
+        user_authentication_info=new_user_authentication_info,
+        user_group=admin_user_group
+    )
+
+
+@pytest.fixture
+def default_username(default_user) -> str:
+    return default_user.name
+
+
+@pytest.fixture
+def password() -> str:
+    return "password"
+
+
+@pytest.fixture
+def user_auth(password) -> UserAuthenticationInfo:
+    return UserAuthenticationInfo(password=password)
+
+
+@pytest.fixture
+def default_auth_request(default_user, default_user_authentication_info) -> AuthenticationRequest:
+    return AuthenticationRequest(user=default_user, secret=default_user_authentication_info)
 
 
 @pytest.fixture
@@ -59,13 +102,18 @@ def package() -> Package:
 
 
 @pytest.fixture
-def token() -> str:
-    return "87d3c9d0817af26f70281302e34fa8b79753b4ef48f2d63303cb79f45928c2cf"
+def default_token() -> str:
+    return utils.db_hash("default_token")
 
 
 @pytest.fixture
 def package_id(package) -> str:
     return package.metadata.name + "_" + package.metadata.version
+
+
+@pytest.fixture
+def admin_user_group_name(admin_user_group) -> str:
+    return admin_user_group.name
 
 
 @pytest.fixture
