@@ -400,12 +400,24 @@ async def packages_list(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    # Now check if user is authorized to search database
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.search:
+        err = Error(code=401, message="Not authorized to search the registry!")
+        response.status_code = err.code
+        return err
+    packages = db.get_page_of_packages(user, package_query, offset)
+    if isinstance(packages, Error):
+        response.status_code = packages.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return packages
 
 
 @router.delete(
