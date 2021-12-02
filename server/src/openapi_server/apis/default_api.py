@@ -65,11 +65,23 @@ async def create_auth_token(
     summary="Create a UserGroup",
 )
 async def create_user_group(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
     user_group: UserGroup = Body(None, description="A new UserGroup to be created."),
 ) -> None:
     """Creates a new instance of a UserGroup."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.delete(
@@ -81,11 +93,23 @@ async def create_user_group(
     summary="Delete a UserGroup",
 )
 async def delete_user_group(
+    response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """Deletes an existing UserGroup."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.get(
@@ -97,11 +121,23 @@ async def delete_user_group(
     summary="Get a UserGroup",
 )
 async def get_user_group(
+    response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> UserGroup:
     """Gets the details of a single instance of a UserGroup."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.get(
@@ -113,6 +149,7 @@ async def get_user_group(
     summary="List All UserGroups",
 )
 async def get_user_groups(
+    response: Response
 ) -> List[UserGroup]:
     """Gets a list of all UserGroup entities."""
     ...
@@ -128,10 +165,22 @@ async def get_user_groups(
     summary="Delete all versions of this package.",
 )
 async def package_by_name_delete(
+    response: Response,
     name: str = Path(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.get(
@@ -144,11 +193,23 @@ async def package_by_name_delete(
     tags=["default"],
 )
 async def package_by_name_get(
+    response: Response,
     name: str = Path(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> List[PackageHistoryEntry]:
     """Return the history of this package (all versions)."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.post(
@@ -184,12 +245,11 @@ async def package_create(
     metadata = db.upload_package(user, package)
     if isinstance(metadata, Error):
         response.status_code = metadata.code
-    else:
-        # Now decrement remaining token uses
-        decrement = db.decrement_token_interactions(token)
-        if isinstance(decrement, Error):
-            response.status_code = decrement.code
-            return decrement
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
     return metadata
 
 
@@ -203,10 +263,22 @@ async def package_create(
     summary="Delete this version of the package.",
 )
 async def package_delete(
+    response: Response,
     id: str = Path(None, description="Package ID"),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.get(
@@ -219,10 +291,22 @@ async def package_delete(
     tags=["default"],
 )
 async def package_rate(
+    response: Response,
     id: str = Path(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> PackageRating:
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.get(
@@ -234,11 +318,23 @@ async def package_rate(
     tags=["default"],
 )
 async def package_retrieve(
+    response: Response,
     id: str = Path(None, description="ID of package to fetch"),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> Package:
     """Return this package."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.put(
@@ -274,12 +370,11 @@ async def package_update(
     results = db.update_package(user, id, package)
     if isinstance(results, Error):
         response.status_code = results.code
-    else:
-        # Now decrement remaining token uses
-        decrement = db.decrement_token_interactions(token)
-        if isinstance(decrement, Error):
-            response.status_code = decrement.code
-            return decrement
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
     return results
 
 
@@ -293,12 +388,24 @@ async def package_update(
     summary="Get packages",
 )
 async def packages_list(
+    response: Response,
     package_query: List[PackageQuery] = Body(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.delete(
@@ -343,12 +450,24 @@ async def registry_reset(
     summary="Update a UserGroup",
 )
 async def update_user_group(
+    response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
     x_authorization: str = Header(None, description="", convert_underscores=False),
     user_group: UserGroup = Body(None, description="Updated UserGroup information."),
 ) -> None:
     """Updates an existing UserGroup."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
 
 
 @router.post(
@@ -360,8 +479,20 @@ async def update_user_group(
     summary="Create a new user",
 )
 async def user_create(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
     user: User = Body(None, description="New user to register."),
 ) -> User:
     """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
-    ...
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    # TODO: DO STUFF HERE
+    # Now decrement remaining token uses
+    decrement = db.decrement_token_interactions(token)
+    if isinstance(decrement, Error):
+        response.status_code = decrement.code
+        return decrement
