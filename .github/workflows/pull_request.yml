@@ -6,6 +6,9 @@ on:
       - main
 
 jobs:
+  strategy:
+    max-parallel: 1
+  
   lint:
     name: PyLint
     runs-on: ubuntu-latest
