@@ -27,7 +27,8 @@ jobs:
         run: |
           export GOOGLE_CLOUD_PROJECT=${{secrets.GOOGLE_PROJECT_ID}}
           export BIGQUERY_DATASET=module_registry
-          export GOOGLE_APPLICATION_CREDENTIALS=${{secrets.GOOGLE_APP_ENGINE_KEY}}
+          printf '%s\n' "${{secrets.GOOGLE_APP_ENGINE_KEY}}" > google_creds.json
+          export GOOGLE_APPLICATION_CREDENTIALS=google_creds.json
           pytest server
       - name: Test Scorer
         run: |
