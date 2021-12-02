@@ -21,6 +21,7 @@ class UserGroup(BaseModel):
         search: The search of this UserGroup.
         download: The download of this UserGroup.
         create_user: The create_user of this UserGroup.
+        id: The id of this UserGroup [Optional].
     """
 
     name: str
@@ -28,5 +29,6 @@ class UserGroup(BaseModel):
     search: bool
     download: bool
     create_user: bool
+    id: Optional[int] = None
 
 UserGroup.update_forward_refs()

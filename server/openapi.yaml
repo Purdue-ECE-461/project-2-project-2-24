@@ -624,6 +624,7 @@ components:
       example:
         name: Alfalfa
         isAdmin: true
+        id: 1
         UserAuthenticationInfo:
           password: password
         UserGroup:
@@ -645,6 +646,12 @@ components:
           $ref: '#/components/schemas/UserAuthenticationInfo'
         UserGroup:
           $ref: '#/components/schemas/UserGroup'
+        id:
+          description: ID of User
+          example: 1
+          format: int32
+          title: Root Type for UserID
+          type: integer
       required:
       - isAdmin
       - name
@@ -725,6 +732,7 @@ components:
         User:
           name: Alfalfa
           isAdmin: true
+          id: 1
           UserAuthenticationInfo:
             password: password
           UserGroup:
@@ -784,6 +792,7 @@ components:
         User:
           name: Alfalfa
           isAdmin: true
+          id: 1
           UserAuthenticationInfo:
             password: password
           UserGroup:
@@ -861,6 +870,12 @@ components:
           type: boolean
         create_user:
           type: boolean
+        id:
+          description: ID of UserGroup
+          example: 1
+          format: int32
+          title: Root Type for UserGroupID
+          type: integer
       required:
       - create_user
       - download
@@ -869,6 +884,18 @@ components:
       - upload
       title: Root Type for UserGroup
       type: object
+    UserID:
+      description: ID of User
+      example: 1
+      format: int32
+      title: Root Type for UserID
+      type: integer
+    UserGroupID:
+      description: ID of UserGroup
+      example: 1
+      format: int32
+      title: Root Type for UserGroupID
+      type: integer
   securitySchemes:
     UserAndPasswordYieldsToken:
       description: Use the /authentication endpoint to obtain an authorization token.
