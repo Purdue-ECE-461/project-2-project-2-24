@@ -286,9 +286,21 @@ async def packages_list(
     tags=["default"],
 )
 async def registry_reset(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
-    ...
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.create_user:
+        err = Error(code=401, message="Not authorized to reset the registry!")
+        response.status_code = err.code
+        return err
+    reset = db.reset_registry()
+    if isinstance(reset, Error):
+        response.status_code = reset.code
+    return reset
 
 
 @router.put(

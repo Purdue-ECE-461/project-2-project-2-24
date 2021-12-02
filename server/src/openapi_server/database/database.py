@@ -81,9 +81,8 @@ class Database:
         # Generate query
         query = f"""
                     UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages 
-                    SET (upload_user_id, zip)
-                    VALUES ({upload_user_id}, "{content}")
-                    WHERE id = {package_id}
+                    SET upload_user_id = {upload_user_id}, zip = "{content}"
+                    WHERE id = "{metadata.id}"
                 """
 
         results = self.execute_query(query)
@@ -121,14 +120,16 @@ class Database:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
-        sensitive = package.sensitive
-        secret = package.secret
+        sensitive = metadata.sensitive
+        secret = metadata.secret
 
         if sensitive:
             # Get js_program
             js_program = data.js_program
             if js_program is not None:
-                self.upload_js_program(package_id, js_program)
+                js_result = self.upload_js_program(package_id, js_program)
+                if isinstance(js_result, Error):
+                    return js_result
 
         # Content provided for package upload, URL provided for package ingest
         content = data.content
@@ -196,7 +197,7 @@ class Database:
         if isinstance(results, Error):
             return results
         else:
-            return dict(list(results.items()))["id"]
+            return dict(list(results[0].items()))["id"]
 
     # ________________________________________________________________________________________________________________
     #                                                   RATINGS
@@ -294,20 +295,20 @@ class Database:
         elif len(user_query_results) == 1:
             user_query_dict = dict(list(user_query_results[0].items()))
             user_group = UserGroup(
+                id=user_query_dict["user_group_id"],
                 name=user_query_dict["user_group_name"],
                 upload=user_query_dict["upload"],
                 search=user_query_dict["search"],
                 download=user_query_dict["download"],
                 create_user=user_query_dict["create_user"]
             )
-            user_group.id = user_query_dict["user_group_id"]
             user = User(
+                id=user_query_dict["user_id"],
                 name=user_query_dict["username"],
                 is_admin=(user_query_dict["user_group_id"] == 1),
                 user_authentication_info=UserAuthenticationInfo(password=user_query_dict["hash_pass"]),
                 user_group=user_group
             )
-            user.id = user_query_dict["user_id"]
             return user
         else:
             return Error(code=500, message="Could not find owner of token!")
@@ -424,7 +425,7 @@ class Database:
         if isinstance(results, Error):
             return results
         else:
-            user_password_hash = dict(list(results))["hash_pass"]
+            user_password_hash = dict(list(results[0].items()))["hash_pass"]
             return user_password_hash == given_password_hash
 
     # ________________________________________________________________________________________________________________
@@ -465,7 +466,7 @@ class Database:
         # Execute query
         return self.execute_query(query)
 
-    def reset_registry(self, token):
+    def reset_registry(self):
         # First clear all tables
         query = f"""
             DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.history WHERE TRUE;
