@@ -124,8 +124,8 @@ class Database:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
-        sensitive = metadata.sensitive
-        secret = metadata.secret
+        sensitive = metadata.sensitive if metadata.sensitive is not None else False
+        secret = metadata.secret if metadata.secret is not None else False
 
         if sensitive:
             # Get js_program
@@ -248,8 +248,8 @@ class Database:
     def upload_js_program(self, package_id, js_program):
         # Get new script id
         js_program_id = self.gen_new_integer_id("scripts")
-        if js_program_id is None:
-            return Error(code=500, message="Couldn't generate new js_program id!")
+        if isinstance(js_program_id, Error):
+            return js_program_id
 
         # Generate query
         query = f"""
@@ -438,7 +438,7 @@ class Database:
         if isinstance(results, Error):
             return results
         elif len(results) > 0:
-            return results[0].get("id", default=None)
+            return int(results[0].get("id", default="1"))
         else:
             return Error(code=400, message="Could not find user group with provided name!")
 
@@ -462,13 +462,13 @@ class Database:
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group_name)
-        if user_group_id is None:
-            return Error(code=400, message="Cannot find user group with provided name! User not created!")
+        if isinstance(user_group_id, Error):
+            return user_group_id
 
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
-            VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", "{user_group_id}")
+            VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", {user_group_id})
         """
 
         results = self.execute_query(query)
@@ -486,7 +486,7 @@ class Database:
         if isinstance(results, Error):
             return results
         elif len(results) > 0:
-            return results[0].get("id", default=None)
+            return int(results[0].get("id", default="1"))
         else:
             return Error(code=400, message="Could not find user with provided name!")
 
@@ -594,7 +594,7 @@ class Database:
         elif len(results) == 0:
             return 1
         else:
-            return results[0].get("new_id", default=None)
+            return int(results[0].get("new_id", default="1"))
 
     def gen_new_uuid(self):
         # Generate query
