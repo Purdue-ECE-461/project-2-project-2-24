@@ -22,11 +22,13 @@ class User(BaseModel):
         is_admin: The is_admin of this User.
         user_authentication_info: The user_authentication_info of this User [Optional].
         user_group: The user_group of this User [Optional].
+        id: The id of this User [Optional].
     """
 
     name: str
     is_admin: bool
     user_authentication_info: Optional[UserAuthenticationInfo] = None
     user_group: Optional[UserGroup] = None
+    id: Optional[int] = None
 
 User.update_forward_refs()

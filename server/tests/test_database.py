@@ -8,15 +8,21 @@ load_dotenv()
 
 db = database.Database()
 
-# TODO: ADD USER GROUP CREATE FUNCTIONALITY / TEST
+
+def test_reset_registry(default_token):
+    print("\nTESTING: Reset registry")
+    print()
+    result = db.reset_registry(default_token)
+    print("Reset result:", result)
+    assert not isinstance(result, Error)
 
 
-def test_create_new_user_group(token, user_group):
+def test_create_new_user_group(default_token, admin_user_group):
     print("\nTESTING: Create new user group")
     print()
-    new_group = db.create_new_user_group(token, user_group)
+    new_group = db.create_new_user_group(default_token, admin_user_group)
     print("New user group:", new_group)
-    assert not isinstance(user_group, Error)
+    assert not isinstance(new_group, Error)
 
 
 def test_get_user_group_id():
@@ -25,35 +31,43 @@ def test_get_user_group_id():
     print("TODO")
 
 
-def test_create_new_user(user):
+def test_create_new_user(default_user, new_user, new_user_password, admin_user_group_name):
     print("\nTESTING: Create new user")
     print()
-    results = db.create_new_user(user, user, "password", 1)
+    results = db.create_new_user(default_user, new_user, new_user_password, admin_user_group_name)
     print("Created new user:", results)
     assert not isinstance(results, Error)
 
 
-def test_create_new_token(auth_request):
+def test_create_new_token(default_auth_request):
     print("\nTESTING: Create new token")
     print()
-    created_token = db.create_new_token(auth_request)
+    created_token = db.create_new_token(default_auth_request)
     print("New token:", created_token)
     assert isinstance(created_token, str)
 
 
-def test_get_user_id_from_token(token):
+def test_get_user_id_from_token(default_token):
     print("\nTESTING: Get user ID from token")
     print()
-    user_id = db.get_user_id_from_token(token)
+    user_id = db.get_user_id_from_token(default_token)
     print("User ID:", user_id)
     assert isinstance(user_id, int)
 
 
-def test_upload_package(token, package):
+def test_upload_package(default_user, package):
     print("\nTESTING: Upload package")
     print()
-    metadata = db.upload_package(token=token, package=package)
+    metadata = db.upload_package(user=default_user, package=package)
     print("Uploaded metadata:", metadata)
+    assert isinstance(metadata, PackageMetadata)
+
+
+def test_update_package(default_token, package_id, package):
+    print("\nTESTING: Update package")
+    print()
+    metadata = db.update_package(token=default_token, package_id=package_id, package=package)
+    print("Updated metadata:", metadata)
     assert isinstance(metadata, PackageMetadata)
 
 
@@ -73,10 +87,10 @@ def test_gen_new_integer_id(table):
     assert isinstance(new_id, int)
 
 
-def test_get_user_id(username):
+def test_get_user_id(default_username):
     print("\nTESTING: Get user ID")
     print()
-    user_id = db.get_user_id(username)
+    user_id = db.get_user_id(default_username)
     print("User id:", user_id)
     assert isinstance(user_id, int)
 

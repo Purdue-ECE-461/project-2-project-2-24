@@ -531,6 +531,9 @@ components:
         UserGroup:
           $ref: '#/components/schemas/UserGroup'
           description: Group user belongs to.
+        id:
+          $ref: '#/components/schemas/UserID'
+          description: ID of User in database
     UserAuthenticationInfo:
       description: Authentication info for a user
       required:
@@ -682,12 +685,27 @@ components:
           type: boolean
         create_user:
           type: boolean
+        id:
+          $ref: '#/components/schemas/UserGroupID'
+          description: ID of UserGroup in database
       example:
         name: Admins
         upload: true
         search: true
         download: true
         register: true
+    UserID:
+      format: int32
+      title: Root Type for UserID
+      description: ID of User
+      type: integer
+      example: 1
+    UserGroupID:
+      format: int32
+      title: Root Type for UserGroupID
+      description: ID of UserGroup
+      type: integer
+      example: 1
   securitySchemes:
     UserAndPasswordYieldsToken:
       type: apiKey
