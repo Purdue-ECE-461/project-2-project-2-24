@@ -5,10 +5,7 @@ on:
     branches:
       - main
 
-jobs:
-  strategy:
-    max-parallel: 1
-  
+jobs:  
   lint:
     name: PyLint
     runs-on: ubuntu-latest
