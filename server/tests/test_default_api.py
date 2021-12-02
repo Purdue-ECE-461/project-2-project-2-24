@@ -19,7 +19,7 @@ def test_create_auth_token(client: TestClient):
 
     
     """
-    authentication_request = {"secret":{"password":"password"},"user":{"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"register":1}}}
+    authentication_request = {"secret":{"password":"password"},"user":{"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}}}
 
     headers = {
     }
@@ -31,7 +31,7 @@ def test_create_auth_token(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_create_user_group(client: TestClient):
@@ -39,7 +39,7 @@ def test_create_user_group(client: TestClient):
 
     Create a UserGroup
     """
-    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"register":1}
+    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -52,7 +52,7 @@ def test_create_user_group(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_delete_user_group(client: TestClient):
@@ -71,7 +71,7 @@ def test_delete_user_group(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_get_user_group(client: TestClient):
@@ -90,7 +90,7 @@ def test_get_user_group(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_get_user_groups(client: TestClient):
@@ -108,7 +108,7 @@ def test_get_user_groups(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_by_name_delete(client: TestClient):
@@ -127,7 +127,7 @@ def test_package_by_name_delete(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_by_name_get(client: TestClient):
@@ -146,7 +146,7 @@ def test_package_by_name_get(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_create(client: TestClient):
@@ -167,7 +167,7 @@ def test_package_create(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_delete(client: TestClient):
@@ -186,7 +186,7 @@ def test_package_delete(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_rate(client: TestClient):
@@ -205,7 +205,7 @@ def test_package_rate(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_retrieve(client: TestClient):
@@ -224,7 +224,7 @@ def test_package_retrieve(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_package_update(client: TestClient):
@@ -245,7 +245,7 @@ def test_package_update(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_packages_list(client: TestClient):
@@ -267,7 +267,7 @@ def test_packages_list(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_registry_reset(client: TestClient):
@@ -286,7 +286,7 @@ def test_registry_reset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_update_user_group(client: TestClient):
@@ -294,7 +294,7 @@ def test_update_user_group(client: TestClient):
 
     Update a UserGroup
     """
-    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"register":1}
+    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -307,7 +307,7 @@ def test_update_user_group(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 
 
 def test_user_create(client: TestClient):
@@ -315,7 +315,7 @@ def test_user_create(client: TestClient):
 
     Create a new user
     """
-    user = {"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"register":1}}
+    user = {"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -328,5 +328,4 @@ def test_user_create(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    assert response.status_code == 200

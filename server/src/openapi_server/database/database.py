@@ -11,6 +11,8 @@ from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 from openapi_server.models.user import User
+from openapi_server.models.user_authentication_info import UserAuthenticationInfo
+from openapi_server.models.user_group import UserGroup
 
 from openapi_server.database import utils
 
@@ -52,48 +54,35 @@ class Database:
     #                                                   PACKAGES
     # ________________________________________________________________________________________________________________
 
-    def update_package(self, token, package_id, package):
+    def update_package(self, user, package_id, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
         # Name, version, and ID must match
         name = metadata.name
         version = metadata.version
-        existing_package_id = self.get_package(name, version)
-        if isinstance(package, Error):
-            return package
-        elif (existing_package_id != package_id):
-            return Error(code=403, message="Supplied ID does not match ID in registry: " + package_id)
+        existing_package_id = self.get_package_id(name, version)
+        if isinstance(existing_package_id, Error):
+            return existing_package_id
+        elif existing_package_id != package_id:
+            return Error(code=403, message="Supplied ID (" + package_id + ") does not match ID in registry (" + existing_package_id + ")!")
         metadata.id = package_id
 
-        # Content or URL or both should be set for upload
-        content = data.content if data.content is not None else ""
-        url = data.url if data.url is not None else ""
-        if content == "" and url == "":
-            return Error(code=400, message="Missing URL AND Content!! Need at least one.")
+        # Update is only for content
+        content = data.content
+        if content is None:
+            return Error(code=400, message="Missing Content for package update!")
 
         # Get user id
-        upload_user_id = self.get_user_id_from_token(token)
+        upload_user_id = user.id
         if upload_user_id is None:
-            return Error(code=500, message="Cannot find ID of uploading user!!")
-
-        # TODO: Make sure user is authenticated to perform task BEFORE doing trying to do anything in this whole file?
-
-        # TODO: Implement sensitive and secret flags
-        sensitive = True
-        secret = True
-
-        if sensitive:
-            # Get js_program
-            js_program = data.js_program
-            if js_program is not None:
-                self.update_js_program("packageid", js_program)
+            return Error(code=500, message="Could not find ID of uploading user!!")
 
         # Generate query
         query = f"""
                     UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages 
-                    SET (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                    VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+                    SET (upload_user_id, zip)
+                    VALUES ({upload_user_id}, "{content}")
                     WHERE id = {package_id}
                 """
 
@@ -102,7 +91,7 @@ class Database:
         if isinstance(results, Error):
             return results
         else:
-            return metadata
+            return {"description": "Success."}
 
     # Params:
     # auth: token (string)
@@ -146,6 +135,7 @@ class Database:
         url = data.url
         if content is None and url is not None:
             # Ingest package query
+            # TODO: MUST RATE FIRST -> if net score greater than 0.5, then it is "ingestible" and gets added
             query = f"""
                                     INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
                                     VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, NULL)
@@ -195,6 +185,19 @@ class Database:
         else:
             return len(results) > 0
 
+    def get_package_id(self, name, version):
+        # Generate query
+        query = f"""
+            SELECT id, name, version from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE name = "{name}" AND version = "{version}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        else:
+            return dict(list(results.items()))["id"]
+
     # ________________________________________________________________________________________________________________
     #                                                   RATINGS
     # ________________________________________________________________________________________________________________
@@ -228,10 +231,15 @@ class Database:
     # ________________________________________________________________________________________________________________
 
     def create_new_token(self, auth_request):
-
+        # First get id of user
         user_id = self.get_user_id(auth_request.user.name)
         if user_id is None:
             return Error(code=500, message="Could not find User ID of provided User!")
+
+        # Then check user's password
+        if not self.user_password_is_correct(auth_request, user_id):
+            return Error(code=401, message="Incorrect password provided!")
+
         new_token_id = self.gen_new_integer_id("tokens")
         new_token = utils.db_hash(str(round(time.time() * 1000)))
         new_token_hash = utils.db_hash(new_token)
@@ -264,7 +272,7 @@ class Database:
         else:
             return None
 
-    def get_user_and_group_from_token(self, token):
+    def get_user_from_token(self, token):
         # Hash token
         hashed_token = utils.db_hash(token)
 
@@ -274,32 +282,43 @@ class Database:
                 WHERE hash_token = "{hashed_token}"
             )
             
-            SELECT user_id_query.user_id, users.id, users.username, users.hash_pass, users.user_group_id FROM user_id_query, {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users users
-            WHERE users.id = user_id_query.user_id
+            SELECT user_id_query.user_id, users.id, users.username, users.hash_pass, users.user_group_id,
+            user_groups.id, user_groups.name as user_group_name, user_groups.upload, user_groups.search, user_groups.download, user_groups.create_user
+            FROM user_id_query, {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users users, {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups user_groups
+            WHERE users.id = user_id_query.user_id AND user_groups.id = users.user_group_id;
         """
 
         user_query_results = self.execute_query(user_query)
         if isinstance(user_query_results, Error):
             return user_query_results
         elif len(user_query_results) == 1:
-            user_query_dict = dict(user_query_results[0].items())
+            user_query_dict = dict(list(user_query_results[0].items()))
+            user_group = UserGroup(
+                name=user_query_dict["user_group_name"],
+                upload=user_query_dict["upload"],
+                search=user_query_dict["search"],
+                download=user_query_dict["download"],
+                create_user=user_query_dict["create_user"]
+            )
+            user_group.id = user_query_dict["user_group_id"]
             user = User(
                 name=user_query_dict["username"],
                 is_admin=(user_query_dict["user_group_id"] == 1),
-                user_authentication_info=UserAuthenticationInfo(),
-                user_group=
+                user_authentication_info=UserAuthenticationInfo(password=user_query_dict["hash_pass"]),
+                user_group=user_group
             )
-            print(user_query_dict)
+            user.id = user_query_dict["user_id"]
+            return user
         else:
-            return Error(code=500, message="Could not find user for token!")
-        print(user_query_results)
-
+            return Error(code=500, message="Could not find owner of token!")
 
     # ________________________________________________________________________________________________________________
     #                                                USER GROUPS
     # ________________________________________________________________________________________________________________
 
     def create_new_user_group(self, token, user_group):
+        # TODO FINISH THIS FUNCTION
+        # TODO MOVE PERMISSION CHECK TO DEFAULT API FILE
         # Is user allowed to create a new UserGroup?
         user = self.get
         if not user.is_admin:
@@ -379,7 +398,7 @@ class Database:
     def get_user_id(self, name):
         # Generate query
         query = f"""
-            SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users WHERE username = "{name}"
+            SELECT id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users WHERE username = "{name}"
         """
 
         results = self.execute_query(query)
@@ -390,6 +409,23 @@ class Database:
             return None
         else:
             return results[0].get("id", default=None)
+
+    def user_password_is_correct(self, auth_request, user_id):
+        # Get hash of provided password
+        given_password_hash = utils.db_hash(auth_request.secret.password)
+
+        # Get hash of user's actual password
+        query = f"""
+            SELECT id, hash_pass FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users
+            WHERE id = {user_id}
+        """
+
+        results = self.execute_query(query)
+        if isinstance(results, Error):
+            return results
+        else:
+            user_password_hash = dict(list(results))["hash_pass"]
+            return user_password_hash == given_password_hash
 
     # ________________________________________________________________________________________________________________
     #                                                   COMMON
@@ -452,7 +488,7 @@ class Database:
         if isinstance(results, Error):
             return results
         else:
-            return "Successfully reset registry!"
+            return {"message": "Successfully reset registry!"}
 
     def gen_new_integer_id(self, table):
         query = f"""

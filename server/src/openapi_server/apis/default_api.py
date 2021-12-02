@@ -37,15 +37,6 @@ def token_from_auth(auth):
     return auth.split()[-1]
 
 
-def get_user_and_group_from_token(token) -> (User, UserGroup):
-    user_info = db.get_user_and_group_from_token(token)
-    if isinstance(user_info, Error):
-        return user_info
-    user = user_info["user"]
-    user_group = user_info["user_group"]
-    return user, user_group
-
-
 @router.put(
     "/authenticate",
     responses={
@@ -56,9 +47,13 @@ def get_user_and_group_from_token(token) -> (User, UserGroup):
     tags=["default"],
 )
 async def create_auth_token(
+    response: Response,
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
-    return db.create_new_token(authentication_request)
+    new_token = db.create_new_token(authentication_request)
+    if isinstance(new_token, Error):
+        response.status_code = new_token.code
+    return new_token
 
 
 @router.post(
@@ -164,15 +159,25 @@ async def package_by_name_get(
         403: {"description": "Package exists already."},
     },
     tags=["default"],
+    # Default status code:
+    status_code=201
 )
 async def package_create(
+    response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
-    user, user_group = get_user_and_group_from_token(token_from_auth(x_authorization))
-    if not user_group.upload:
-        return Error(code=401, message="Not authorized to upload a package!")
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to upload a package!")
+        response.status_code = err.code
+        return err
     metadata = db.upload_package(user, package)
+    if isinstance(metadata, Error):
+        response.status_code = metadata.code
     return metadata
 
 
@@ -234,16 +239,24 @@ async def package_retrieve(
     summary="Update this version of the package.",
 )
 async def package_update(
+    response: Response,
     id: str = Path(None, description=""),
     package: Package = Body(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
-    success = db.update_package(token_from_auth(x_authorization), id, package)
-    if success:
-        return {"description": "Success."}
-    else:
-        return Error(code=400, message="Malformed request!")
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to update a package!")
+        response.status_code = err.code
+        return err
+    results = db.update_package(user, id, package)
+    if isinstance(results, Error):
+        response.status_code = results.code
+    return results
 
 
 @router.post(
