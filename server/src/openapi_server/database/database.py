@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+
+import datetime
 from re import L
 from google.cloud import bigquery
 from google.api_core.exceptions import BadRequest
@@ -23,6 +25,7 @@ import time
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
 MAX_TOKEN_USES = 1000
+MAX_TOKEN_AGE = 10
 
 
 class Database:
@@ -312,6 +315,44 @@ class Database:
             return user
         else:
             return Error(code=500, message="Could not find owner of token!")
+
+    def check_token_expiration(self, token):
+        # Generate query
+        query = f"""
+            SELECT id, hash_token, created, interactions, user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+            WHERE hash_token = "{utils.db_hash(token)}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+
+        token_details = dict(list(results[0].items()))
+
+        # Check if token is more than MAX_TOKEN_AGE hours old
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+        token_expiration = token_details["created"] + datetime.timedelta(hours=MAX_TOKEN_AGE)
+        if current_time > token_expiration:
+            return Error(code=401, message="Token expired: more than " + str(MAX_TOKEN_AGE) + " hours old!")
+
+        # Now check if token has been used more than MAX_TOKEN_USES times
+        remaining_uses = token_details["interactions"]
+        if remaining_uses < 1:
+            return Error(code=401, message="Token expired: used more than " + str(MAX_TOKEN_USES) + " times!")
+
+        # Token is valid
+        return {"message": "Token is valid!"}
+
+    def decrement_token_interactions(self, token):
+        # Generate query
+        query = f"""
+            UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+            SET interactions = interactions - 1
+            WHERE hash_token = "{utils.db_hash(token)}"
+        """
+
+        return self.execute_query(query)
 
     # ________________________________________________________________________________________________________________
     #                                                USER GROUPS

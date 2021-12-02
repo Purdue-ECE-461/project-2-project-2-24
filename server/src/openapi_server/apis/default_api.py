@@ -167,7 +167,13 @@ async def package_create(
     x_authorization: str = Header(None, description="", convert_underscores=False),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
-    user = db.get_user_from_token(token_from_auth(x_authorization))
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
         return user
@@ -178,6 +184,12 @@ async def package_create(
     metadata = db.upload_package(user, package)
     if isinstance(metadata, Error):
         response.status_code = metadata.code
+    else:
+        # Now decrement remaining token uses
+        decrement = db.decrement_token_interactions(token)
+        if isinstance(decrement, Error):
+            response.status_code = decrement.code
+            return decrement
     return metadata
 
 
@@ -245,7 +257,13 @@ async def package_update(
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
-    user = db.get_user_from_token(token_from_auth(x_authorization))
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
         return user
@@ -256,6 +274,12 @@ async def package_update(
     results = db.update_package(user, id, package)
     if isinstance(results, Error):
         response.status_code = results.code
+    else:
+        # Now decrement remaining token uses
+        decrement = db.decrement_token_interactions(token)
+        if isinstance(decrement, Error):
+            response.status_code = decrement.code
+            return decrement
     return results
 
 
@@ -289,7 +313,13 @@ async def registry_reset(
     response: Response,
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> None:
-    user = db.get_user_from_token(token_from_auth(x_authorization))
+    token = token_from_auth(x_authorization)
+    # First check if token is expired
+    expired = db.check_token_expiration(token)
+    if isinstance(expired, Error):
+        response.status_code = expired.code
+        return expired
+    user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
         return user
@@ -300,6 +330,7 @@ async def registry_reset(
     reset = db.reset_registry()
     if isinstance(reset, Error):
         response.status_code = reset.code
+    # Don't decrement token for registry reset
     return reset
 
 
