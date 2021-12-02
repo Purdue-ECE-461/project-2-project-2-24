@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from re import L
+
 from google.cloud import bigquery
 from google.api_core.exceptions import BadRequest
 from openapi_server.models.extra_models import TokenModel  # noqa: F401
@@ -19,6 +20,11 @@ from openapi_server.database import utils
 import os
 import hashlib
 import time
+
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.abspath(os.path.abspath(os.path.dirname(__file__))))))
+
+from scorer import repoMetrics
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
@@ -50,9 +56,30 @@ class Database:
     #                                                   HISTORY
     # ________________________________________________________________________________________________________________
 
-    # ________________________________________________________________________________________________________________
-    #                                                   PACKAGES
-    # ________________________________________________________________________________________________________________
+    def rate_package(self, user, package_id, package, Repository):
+
+        credentials, project = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/bigquery']
+        )
+        client = bigquery.Client(
+            project=project,
+            credentials=credentials
+        )
+        rows = [
+            (u,user.id),
+            (u,package_id),
+            (u,Repository.overall_score),
+            (u,Repository.RAMP_UP),
+            (u,Repository.CORRECTNESS),
+            (u,Repository.BUS_FACTOR),
+            (u,Repository.RESPONSIVENESS),
+            (u,Repository.LICENSE),
+            (u,Repository.FRACTION_DEPENDENCY),            
+        ]
+        DATASET_ID = 'dataset_id'
+        TABLE_ID = 'table_id'
+        table_ref = client.dataset(DATASET_ID).table(TABLE_ID)
+        table = client.get_table(table_ref)
 
     def update_package(self, user, package_id, package):
         # Get metadata and data
