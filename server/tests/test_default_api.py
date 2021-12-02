@@ -19,7 +19,7 @@ def test_create_auth_token(client: TestClient):
 
     
     """
-    authentication_request = {"secret":{"password":"password"},"user":{"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}}}
+    authentication_request = {"secret":{"password":"password"},"user":{"name":"Alfalfa","is_admin":1,"id":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"register":1}}}
 
     headers = {
     }
@@ -39,7 +39,7 @@ def test_create_user_group(client: TestClient):
 
     Create a UserGroup
     """
-    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}
+    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"register":1}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -157,7 +157,7 @@ def test_package_create(client: TestClient):
     package = {"metadata":{"secret":1,"version":"1.2.3","sensitive":1,"id":"ID","name":"Name"},"data":{"content":"Content","js_program":"JSProgram","url":"URL"}}
 
     headers = {
-        "x_authorization": 'default_token',
+        "x_authorization": 'x_authorization_example',
     }
     response = client.request(
         "POST",
@@ -294,7 +294,7 @@ def test_update_user_group(client: TestClient):
 
     Update a UserGroup
     """
-    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}
+    user_group = {"name":"Admins","upload":1,"search":1,"download":1,"register":1}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -315,7 +315,7 @@ def test_user_create(client: TestClient):
 
     Create a new user
     """
-    user = {"name":"Alfalfa","is_admin":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"create_user":1}}
+    user = {"name":"Alfalfa","is_admin":1,"id":1,"user_authentication_info":{"password":"password"},"user_group":{"name":"Admins","upload":1,"search":1,"download":1,"register":1}}
 
     headers = {
         "x_authorization": 'x_authorization_example',
@@ -329,3 +329,4 @@ def test_user_create(client: TestClient):
 
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
+
