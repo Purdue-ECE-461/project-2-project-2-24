@@ -1,0 +1,33 @@
+name: Deploy to Production
+on:
+  workflow_dispatch:
+
+jobs:
+  deployment:
+    name: Deployment
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deply to google engine
+        uses: google-github-actions/deploy-appengine@v0.4.0
+        with:
+          project_id: ${{secrets.GOOGLE_PROJECT_ID}}
+          version: prod
+          credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
+          flags: --no-cache
+          deliverables: server/app.yaml
+      - name: Perform Scan
+        uses: ShiftLeftSecurity/scan-action@master
+        with:
+              type: "python,java"
+#        env:
+#              WORKSPACE: https://github.com/${{ REPO }}/blob/${{ github.sha }}
+#              GITHUB_TOKEN: ${{ secrets.TOKEN }}
+#              SCAN_AUTO_BUILD: true
+      - uses: actions/upload-artifact@v1
+        with:
+          name: reports
+          path: reports
