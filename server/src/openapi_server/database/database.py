@@ -207,7 +207,7 @@ class Database:
 
     # TODO: Support package_query name and version parameters
     # For now, this ignores what is specified in package_query
-    def get_page_of_packages(self, user, package_query, offset):
+    def get_page_of_packages(self, package_query, offset):
         # If no offset provided, get first page
         if offset is None or offset == "":
             offset = 0
