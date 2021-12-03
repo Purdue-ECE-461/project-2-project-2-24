@@ -4,8 +4,6 @@ from openapi_server.models.error import Error
 from openapi_server.models.package_metadata import PackageMetadata
 from dotenv import load_dotenv
 
-from server.src.openapi_server.models.package import Package
-
 load_dotenv()
 
 db = database.Database()
@@ -63,6 +61,7 @@ def test_upload_package(default_user, package):
     metadata = db.upload_package(user=default_user, package=package)
     print("Uploaded metadata:", metadata)
     assert isinstance(metadata, PackageMetadata)
+    
 
 def test_download_package(default_user, package_id):
     print("\nTESTING: Download package")
@@ -70,6 +69,7 @@ def test_download_package(default_user, package_id):
     package = db.download_package(user=default_user, package_id=package_id)
     print("Downloaded Package:", package)
     assert isinstance(package, Package)
+
 
 def test_update_package(default_token, package_id, package):
     print("\nTESTING: Update package")

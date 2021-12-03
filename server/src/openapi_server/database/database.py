@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+
+import datetime
 from re import L
 from google.cloud import bigquery
 from google.api_core.exceptions import BadRequest
@@ -8,8 +10,8 @@ from openapi_server.models.error import Error
 from openapi_server.models.package import Package
 from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
-from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_data import PackageData
+from openapi_server.models.package_query import PackageQuery
 from openapi_server.models.package_rating import PackageRating
 from openapi_server.models.user import User
 from openapi_server.models.user_authentication_info import UserAuthenticationInfo
@@ -21,10 +23,10 @@ import os
 import hashlib
 import time
 
-
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
 MAX_TOKEN_USES = 1000
+MAX_TOKEN_AGE = 10
 
 
 class Database:
@@ -91,11 +93,9 @@ class Database:
                                      data=PackageData(content=results[0]["zip"],
                                                       url=results[0]["url"],
                                                       js_program=js_program))
-
     
         return downloaded_package
-  
-
+    
     def update_package(self, user, package_id, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
@@ -133,7 +133,6 @@ class Database:
             return results
         else:
             return {"description": "Success."}
-
 
     # Params:
     # auth: token (string)
@@ -355,6 +354,44 @@ class Database:
             return user
         else:
             return Error(code=500, message="Could not find owner of token!")
+
+    def check_token_expiration(self, token):
+        # Generate query
+        query = f"""
+            SELECT id, hash_token, created, interactions, user_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+            WHERE hash_token = "{utils.db_hash(token)}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+
+        token_details = dict(list(results[0].items()))
+
+        # Check if token is more than MAX_TOKEN_AGE hours old
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+        token_expiration = token_details["created"] + datetime.timedelta(hours=MAX_TOKEN_AGE)
+        if current_time > token_expiration:
+            return Error(code=401, message="Token expired: more than " + str(MAX_TOKEN_AGE) + " hours old!")
+
+        # Now check if token has been used more than MAX_TOKEN_USES times
+        remaining_uses = token_details["interactions"]
+        if remaining_uses < 1:
+            return Error(code=401, message="Token expired: used more than " + str(MAX_TOKEN_USES) + " times!")
+
+        # Token is valid
+        return {"message": "Token is valid!"}
+
+    def decrement_token_interactions(self, token):
+        # Generate query
+        query = f"""
+            UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.tokens
+            SET interactions = interactions - 1
+            WHERE hash_token = "{utils.db_hash(token)}"
+        """
+
+        return self.execute_query(query)
 
     # ________________________________________________________________________________________________________________
     #                                                USER GROUPS
