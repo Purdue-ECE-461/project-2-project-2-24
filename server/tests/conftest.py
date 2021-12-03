@@ -109,7 +109,7 @@ def int_id_table() -> str:
 @pytest.fixture
 def package() -> Package:
     return Package(
-        metadata=PackageMetadata(name="PackageName", version="1.2.3", id="5"),
+        metadata=PackageMetadata(name="PackageName", version="1.2.3", id="ID"),
         data=PackageData(content="packagecontent", js_program="javascript_code;")
     )
 
@@ -121,7 +121,7 @@ def default_token() -> str:
 
 @pytest.fixture
 def package_id(package) -> str:
-    return package.metadata.name + "_" + package.metadata.version
+    return package.metadata.id
 
 
 @pytest.fixture

@@ -72,31 +72,31 @@ def test_create_auth_token(client: TestClient):
     assert response.status_code == 200
 
 
-def test_create_user_group(client: TestClient):
-    """Test case for create_user_group
-
-    Create a UserGroup
-    """
-    user_group = {
-        "name": "Admins",
-        "upload": 1,
-        "search": 1,
-        "download": 1,
-        "create_user": 1
-    }
-
-    headers = {
-        "x_authorization": 'default_token',
-    }
-    response = client.request(
-        "POST",
-        "/usergroups",
-        headers=headers,
-        json=user_group,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+# def test_create_user_group(client: TestClient):
+#     """Test case for create_user_group
+#
+#     Create a UserGroup
+#     """
+#     user_group = {
+#         "name": "Admins",
+#         "upload": 1,
+#         "search": 1,
+#         "download": 1,
+#         "create_user": 1
+#     }
+#
+#     headers = {
+#         "x_authorization": 'default_token',
+#     }
+#     response = client.request(
+#         "POST",
+#         "/usergroups",
+#         headers=headers,
+#         json=user_group,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200
 
 
 def test_delete_user_group(client: TestClient):
@@ -264,7 +264,7 @@ def test_package_retrieve(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/package/{id}".format(id='id_example'),
+        "/package/{id}".format(id='ID'),
         headers=headers,
     )
 
