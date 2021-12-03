@@ -222,12 +222,23 @@ async def package_rate(
     tags=["default"],
 )
 async def package_retrieve(
+    response: Response,
     id: str = Path(None, description="ID of package to fetch"),
     x_authorization: str = Header(None, description="", convert_underscores=False),
 ) -> Package:
     """Return this package."""
-    ...
-
+    user = db.get_user_from_token(token_from_auth(x_authorization))
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.download:
+        err = Error(code=401, message="Not authorized to retrieve a package!")
+        response.status_code = err.code
+        return err
+    results = db.download_package(user, id)
+    if isinstance(results, Error):
+        response.status_code = results.code
+    return results
 
 @router.put(
     "/package/{id}",

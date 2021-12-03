@@ -9,6 +9,7 @@ from openapi_server.models.package import Package
 from openapi_server.models.package_history_entry import PackageHistoryEntry
 from openapi_server.models.package_metadata import PackageMetadata
 from openapi_server.models.package_query import PackageQuery
+from openapi_server.models.package_data import PackageData
 from openapi_server.models.package_rating import PackageRating
 from openapi_server.models.user import User
 from openapi_server.models.user_authentication_info import UserAuthenticationInfo
@@ -19,6 +20,7 @@ from openapi_server.database import utils
 import os
 import hashlib
 import time
+
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
@@ -53,6 +55,46 @@ class Database:
     # ________________________________________________________________________________________________________________
     #                                                   PACKAGES
     # ________________________________________________________________________________________________________________
+
+    def download_package(self, user, package_id):
+        # Get user id
+        download_user_id = user.id
+        if download_user_id is None:
+            return Error(code=500, message="Could not find ID of downloading user!!")
+        
+        #Generate Query
+        query = f"""
+        SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
+        left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
+        WHERE p.id = "{package_id}"
+
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        
+        elif not len(results):
+            return Error(code=404 , message="Package not found")
+
+        if "script" in results[0].keys():
+            js_program = results[0]["script"]
+        else:
+            js_program = ""    
+        
+        downloaded_package = Package(metadata=PackageMetadata(name=results[0]["name"],
+                                                              version=results[0]["version"],
+                                                              id=results[0]["id"],
+                                                              sensitive=results[0]["sensitive"],
+                                                              secret=results[0]["secret"]),
+                                     data=PackageData(content=results[0]["zip"],
+                                                      url=results[0]["url"],
+                                                      js_program=js_program))
+
+    
+        return downloaded_package
+  
 
     def update_package(self, user, package_id, package):
         # Get metadata and data
@@ -91,6 +133,7 @@ class Database:
             return results
         else:
             return {"description": "Success."}
+
 
     # Params:
     # auth: token (string)
