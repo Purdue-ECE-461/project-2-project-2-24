@@ -420,7 +420,7 @@ async def packages_list(
         err = Error(code=401, message="Not authorized to search the registry!")
         response.status_code = err.code
         return err
-    packages = db.get_page_of_packages(user, package_query, offset)
+    packages = db.get_page_of_packages(package_query, offset)
     if isinstance(packages, Error):
         response.status_code = packages.code
     # Now decrement remaining token uses

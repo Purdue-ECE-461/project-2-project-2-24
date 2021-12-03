@@ -25,6 +25,7 @@ import time
 
 # TODO: REFACTOR AND REFORMAT QUERIES SO THAT UPLOAD PACKAGE ONLY REQUIRES ONE COMBINED QUERY
 
+PACKAGE_PAGE_SIZE = 10
 MAX_TOKEN_USES = 1000
 MAX_TOKEN_AGE = 10
 
@@ -162,8 +163,8 @@ class Database:
             return Error(code=500, message="Cannot find ID of uploading user!!")
 
         # TODO: Implement sensitive and secret flags
-        sensitive = metadata.sensitive
-        secret = metadata.secret
+        sensitive = metadata.sensitive if metadata.sensitive is not None else False
+        secret = metadata.secret if metadata.secret is not None else False
 
         if sensitive:
             # Get js_program
@@ -238,8 +239,42 @@ class Database:
 
         if isinstance(results, Error):
             return results
+        elif len(results) > 0:
+            return results[0]["id"]
         else:
-            return dict(list(results[0].items()))["id"]
+            return Error(code=400, message="Could not find provided package!")
+
+    # TODO: Support package_query name and version parameters
+    # For now, this ignores what is specified in package_query
+    def get_page_of_packages(self, package_query, offset):
+        # If no offset provided, get first page
+        if offset is None or offset == "":
+            offset = 0
+        else:
+            try:
+                offset = int(offset)
+            except ValueError:
+                return Error(code=400, message="Provided offset is invalid (not a number)!")
+
+        # Download requested rows
+        table = self.client.get_table(f'{os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages')
+        fields = [table.schema[0], table.schema[1], table.schema[3]]
+        requested_rows = list(self.client.list_rows(
+            table=table,
+            selected_fields=fields,
+            start_index=(offset * PACKAGE_PAGE_SIZE),
+            page_size=PACKAGE_PAGE_SIZE
+        ))
+
+        output = []
+        for row in requested_rows:
+            output.append({
+                "Name": row["name"],
+                "Version": row["version"],
+                "ID": row["id"]
+            })
+
+        return output
 
     # ________________________________________________________________________________________________________________
     #                                                   RATINGS
@@ -252,8 +287,8 @@ class Database:
     def upload_js_program(self, package_id, js_program):
         # Get new script id
         js_program_id = self.gen_new_integer_id("scripts")
-        if js_program_id is None:
-            return Error(code=500, message="Couldn't generate new js_program id!")
+        if isinstance(js_program_id, Error):
+            return js_program_id
 
         # Generate query
         query = f"""
@@ -313,7 +348,7 @@ class Database:
         elif len(results) > 0:
             return results[0].get("user_id", default=None)
         else:
-            return None
+            return Error(code=400, message="Provided token not recognized!")
 
     def get_user_from_token(self, token):
         # Hash token
@@ -335,20 +370,20 @@ class Database:
         if isinstance(user_query_results, Error):
             return user_query_results
         elif len(user_query_results) == 1:
-            user_query_dict = dict(list(user_query_results[0].items()))
+            user_query_row = user_query_results[0]
             user_group = UserGroup(
-                id=user_query_dict["user_group_id"],
-                name=user_query_dict["user_group_name"],
-                upload=user_query_dict["upload"],
-                search=user_query_dict["search"],
-                download=user_query_dict["download"],
-                create_user=user_query_dict["create_user"]
+                id=user_query_row["user_group_id"],
+                name=user_query_row["user_group_name"],
+                upload=user_query_row["upload"],
+                search=user_query_row["search"],
+                download=user_query_row["download"],
+                create_user=user_query_row["create_user"]
             )
             user = User(
-                id=user_query_dict["user_id"],
-                name=user_query_dict["username"],
-                is_admin=(user_query_dict["user_group_id"] == 1),
-                user_authentication_info=UserAuthenticationInfo(password=user_query_dict["hash_pass"]),
+                id=user_query_row["user_id"],
+                name=user_query_row["username"],
+                is_admin=(user_query_row["user_group_id"] == 1),
+                user_authentication_info=UserAuthenticationInfo(password=user_query_row["hash_pass"]),
                 user_group=user_group
             )
             return user
@@ -367,7 +402,10 @@ class Database:
         if isinstance(results, Error):
             return results
 
-        token_details = dict(list(results[0].items()))
+        if len(results) > 0:
+            token_details = results[0]
+        else:
+            return Error(code=401, message="Provided token not recognized!")
 
         # Check if token is more than MAX_TOKEN_AGE hours old
         current_time = datetime.datetime.now(datetime.timezone.utc)
@@ -438,10 +476,10 @@ class Database:
 
         if isinstance(results, Error):
             return results
-        elif len(results) == 0:
-            return None
+        elif len(results) > 0:
+            return int(results[0].get("id", default="1"))
         else:
-            return results[0].get("id", default=None)
+            return Error(code=400, message="Could not find user group with provided name!")
 
     # ________________________________________________________________________________________________________________
     #                                                   USERS
@@ -463,13 +501,13 @@ class Database:
 
         # Get user group id
         user_group_id = self.get_user_group_id(user_group_name)
-        if user_group_id is None:
-            return Error(code=400, message="Cannot find user group with provided name! User not created!")
+        if isinstance(user_group_id, Error):
+            return user_group_id
 
         # Generate query
         query = f"""
             INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
-            VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", "{user_group_id}")
+            VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", {user_group_id})
         """
 
         results = self.execute_query(query)
@@ -486,10 +524,10 @@ class Database:
 
         if isinstance(results, Error):
             return results
-        elif len(results) == 0:
-            return None
+        elif len(results) > 0:
+            return int(results[0].get("id", default="1"))
         else:
-            return results[0].get("id", default=None)
+            return Error(code=400, message="Could not find user with provided name!")
 
     def user_password_is_correct(self, auth_request, user_id):
         # Get hash of provided password
@@ -504,9 +542,11 @@ class Database:
         results = self.execute_query(query)
         if isinstance(results, Error):
             return results
-        else:
-            user_password_hash = dict(list(results[0].items()))["hash_pass"]
+        elif len(results) > 0:
+            user_password_hash = results[0]["hash_pass"]
             return user_password_hash == given_password_hash
+        else:
+            return Error(code=400, message="Could not find given user!")
 
     # ________________________________________________________________________________________________________________
     #                                                   COMMON
@@ -593,7 +633,7 @@ class Database:
         elif len(results) == 0:
             return 1
         else:
-            return results[0].get("new_id", default=None)
+            return int(results[0].get("new_id", default="1"))
 
     def gen_new_uuid(self):
         # Generate query
@@ -605,10 +645,10 @@ class Database:
 
         if isinstance(results, Error):
             return results
-        elif len(results) == 0:
-            return None
-        else:
+        elif len(results) > 0:
             return results[0].get("new_uuid")
+        else:
+            return Error(code=500, message="Could not generate new UUID!")
 
     def execute_query(self, query):
         print("QUERY:")

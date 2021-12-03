@@ -9,10 +9,10 @@ load_dotenv()
 db = database.Database()
 
 
-def test_reset_registry(default_token):
+def test_reset_registry():
     print("\nTESTING: Reset registry")
     print()
-    result = db.reset_registry(default_token)
+    result = db.reset_registry()
     print("Reset result:", result)
     assert not isinstance(result, Error)
 
@@ -71,10 +71,10 @@ def test_download_package(default_user, package_id):
     assert isinstance(package, Package)
 
 
-def test_update_package(default_token, package_id, package):
+def test_update_package(default_user, package_id, package):
     print("\nTESTING: Update package")
     print()
-    metadata = db.update_package(token=default_token, package_id=package_id, package=package)
+    metadata = db.update_package(user=default_user, package_id=package_id, package=package)
     print("Updated metadata:", metadata)
     assert isinstance(metadata, PackageMetadata)
 
@@ -87,10 +87,10 @@ def test_upload_js_program(package_id, js_program):
     assert isinstance(js_program_id, int)
 
 
-def test_gen_new_integer_id(table):
+def test_gen_new_integer_id(int_id_table):
     print("\nTESTING: Generate new integer ID")
     print()
-    new_id = db.gen_new_integer_id(table)
+    new_id = db.gen_new_integer_id(int_id_table)
     print("New id:", new_id)
     assert isinstance(new_id, int)
 

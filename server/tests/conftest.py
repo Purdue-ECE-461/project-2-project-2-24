@@ -45,12 +45,20 @@ def new_user_password(new_user_authentication_info) -> str:
 
 @pytest.fixture
 def admin_user_group() -> UserGroup:
-    return UserGroup(name="Admin", upload=True, search=True, download=True, create_user=True)
+    return UserGroup(
+        id=1,
+        name="Admins",
+        upload=True,
+        search=True,
+        download=True,
+        create_user=True
+    )
 
 
 @pytest.fixture
 def default_user(default_user_authentication_info, admin_user_group) -> User:
     return User(
+        id=1,
         name="ece461defaultadminuser",
         is_admin=True,
         user_authentication_info=default_user_authentication_info,
@@ -94,16 +102,21 @@ def table() -> str:
 
 
 @pytest.fixture
+def int_id_table() -> str:
+    return "tokens"
+
+
+@pytest.fixture
 def package() -> Package:
     return Package(
         metadata=PackageMetadata(name="PackageName", version="1.2.3", id="5"),
-        data=PackageData(content="packagecontent", url="https://www.package.url", js_program="javascript_code;")
+        data=PackageData(content="packagecontent", js_program="javascript_code;")
     )
 
 
 @pytest.fixture
 def default_token() -> str:
-    return utils.db_hash("default_token")
+    return "default_token"
 
 
 @pytest.fixture
