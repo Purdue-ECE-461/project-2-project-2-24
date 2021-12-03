@@ -329,14 +329,25 @@ async def package_retrieve(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.download:
+        err = Error(code=401, message="Not authorized to retrieve a package!")
+        response.status_code = err.code
+        return err
+    results = db.download_package(user, id)
+    if isinstance(results, Error):
+        response.status_code = results.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
-
-
+    return results
+  
+      
 @router.put(
     "/package/{id}",
     responses={
