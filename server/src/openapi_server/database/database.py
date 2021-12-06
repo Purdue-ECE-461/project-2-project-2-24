@@ -276,9 +276,104 @@ class Database:
 
         return output
 
-    # ________________________________________________________________________________________________________________
-    #                                                   RATINGS
-    # ________________________________________________________________________________________________________________
+    def rate_package(self, user, package_id, zip):
+        rate_user_id = user.id
+        if rate_user_id is None:
+            return Error(code=500, message="Could not find ID of downloading user!!")       
+ 
+
+        query = f"""
+        SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
+        left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
+        WHERE p.id = "{package_id}"
+
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        
+        elif not len(results):
+            return Error(code=404 , message="Package not found")
+        
+        # metric calc using scorer/src : _init_py required
+        z = zipfile.ZipFile(zip) 
+
+        for filename in z.namelist():
+            if not os.path.isdir(filename):
+                for line in z.open(filename):
+                    if "homepage" in str(line):
+                        result = str(line, 'utf-8')
+                        result = result.rstrip().split(',')[0].split(' ')[3].strip('\"')
+                        clean_url = result.strip()
+                        clean_url = scorer.src.url_handler.get_github_url(clean_url)
+                        repo = analyze_repo(clean_url, z)
+                z.close()                
+        del z                            
+        
+        #to distinguish whether its ingestible
+        if repo.flag_check() is True:
+            Ingestible = True
+
+        #ID: #what should be in table_ID?
+        PROJECT_ID = "ece-461-proj-2-24"
+        DATASET_ID = "your_dataset"
+        TABLE_ID = "ece-461-proj-2-24:module_registry.ratings"
+
+        #create table
+        #check whether table already exists
+        if(query.list_tables()):
+            schema = [
+                bigquery.SchemaField("user_id", "INTEGER", mode="REQUIRED"),
+                bigquery.SchemaField("package_id", "STRING", mode="REQUIRED"),
+                bigquery.SchemaField(
+                    "scores",
+                    "RECORD",
+                    mode="REQUIRED",
+                    fields=[
+                        bigquery.SchemaField("net_score", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("ramp_up", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("correctness", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("bus_factor", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("maintainer", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("license", "FLOAT", mode="REQUIRED"),
+                        bigquery.SchemaField("dependency", "FLOAT", mode="REQUIRED"),               
+                    ],
+                ),    
+            ]
+
+            table = bigquery.Table(f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", schema=schema)
+            table = query.create_table(table)
+        
+   
+        #contents to insert
+        rows_to_insert = [
+            {
+                "user_ID": user.id,
+                "package_id": package_id,
+                "scores": {
+                    "net_score": repo.overall_score,
+                    "ramp_up": repo.RAMP_UP,
+                    "correctness": repo.CORRECTNESS,
+                    "bus_factor": repo.BUS_FACTOR,
+                    "maintainer": repo.RESPONSIVENESS,
+                    "license": repo.LICENSE,                 
+                    "dependency": repo.FRACTION_DEPENDENCY,
+                },
+            }
+        ]
+    
+        errors = query.insert_rows_json(
+            f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", rows_to_insert
+        )
+    
+        if errors == []:
+            print("New rows have been inserted")
+        else:
+            print("Encountered errors while inserting rows: {}".format(errors))          
+
+        return 'done'
 
     # ________________________________________________________________________________________________________________
     #                                                   SCRIPTS
