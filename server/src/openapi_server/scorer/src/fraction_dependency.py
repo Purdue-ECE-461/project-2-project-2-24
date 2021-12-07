@@ -1,23 +1,7 @@
-import pip
-import logging # pragma: no cover
-from metric_helper import metric_helper # pragma: no cover
-import datetime # pragma: no cover
-import math # pragma: no cover
-import sys # pragma: no cover
-import os # pragma: no cover
-import chardet # pragma: no cover
-from total_data_helper import total_data_helper # pragma: no cover
-from file_parser import file_parser
-from api import * # pragma: no cover
-from pprint import pprint # pragma: no cover
-from dotenv import load_dotenv # pragma: no cover
-import datetime # pragma: no cover
-import file_parser # pragma: no cover
-from total_data_helper import total_data_helper # pragma: no cover
-from time import time # pragma: no cover
 import pkg_resources # pragma: no cover
 
-def fraction_dependency(dependency_list):           
+
+def fraction_dependency(dependency_list):
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
 
@@ -88,7 +72,7 @@ def fraction_dependency(dependency_list):
                     if int(major) == int(target_major) and int(minor) + 1 > int(target_minor) and int(minor) <= int(target_minor): 
                         num_required_dependency += 1                          
             elif "^" in value and dependency_installed_list.get(key):
-                target_str   = dependency_installed_list[key]
+                target_str = dependency_installed_list[key]
                 
                 if '.' in target_str:
                     target_major = target_str.split('.')[0] 

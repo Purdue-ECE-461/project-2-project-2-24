@@ -1,7 +1,7 @@
 
 var after = require('after');
 var should = require('should');
-var express = require('../')
+var express = require('./.')
   , Route = express.Route
   , methods = require('methods')
 

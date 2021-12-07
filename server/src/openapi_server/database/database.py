@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 
+import base64
 import datetime
+import tempfile
+import zipfile
 from re import L
 from google.cloud import bigquery
 from google.api_core.exceptions import BadRequest
@@ -18,6 +21,8 @@ from openapi_server.models.user_authentication_info import UserAuthenticationInf
 from openapi_server.models.user_group import UserGroup
 
 from openapi_server.database import utils
+
+from openapi_server.scorer.src import main as scorer_main
 
 import os
 import hashlib
@@ -179,16 +184,22 @@ class Database:
         url = data.url
         if content is None and url is not None:
             # Ingest package query
-            # TODO: MUST RATE FIRST -> if net score greater than 0.5, then it is "ingestible" and gets added
+            repo, repo_contents = scorer_main.analyze_repo(url)
+            if not repo.flag_check():
+                return Error(code="400", message="Package scores too low, and is therefore not ingestible!")
+            rating_upload = self.upload_rating_from_repo(repo, package_id)
+            if isinstance(rating_upload, Error):
+                return Error(code="500", message="Could not upload repo rating!!")
             query = f"""
-                                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                                    VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, NULL)
-                                """
+                        INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{repo_contents}")
+                    """
         elif content is not None and url is None:
+            url = utils.get_url_from_content(content)
             # Upload package query
             query = f"""
                         INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                        VALUES ("{package_id}", "{name}", NULL, "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
                     """
         elif content is not None and url is not None:
             return Error(code=400, message="Cannot provide both Content and URL in the same request!")
@@ -276,6 +287,26 @@ class Database:
 
         return output
 
+    # ________________________________________________________________________________________________________________
+    #                                                   RATINGS
+    # ________________________________________________________________________________________________________________\
+
+    def upload_rating_from_repo(self, repo, package_id):
+        # Get new rating id
+        new_rating_id = self.gen_new_integer_id("ratings")
+
+        # Generate query
+        query = f"""
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings
+            (id, package_id, net, ramp_up, correctness, bus_factor, maintainer, license, dependency)
+            VALUES ({new_rating_id}, "{package_id}", {repo.overall_score}, {repo.metric_scores[repo.RAMP_UP]},
+            {repo.metric_scores[repo.CORRECTNESS]}, {repo.metric_scores[repo.BUS_FACTOR]}, 
+            {repo.metric_scores[repo.RESPONSIVENESS]}, {repo.metric_scores[repo.LICENSE]},
+            {repo.metric_scores[repo.FRACTION_DEPENDENCY]})
+        """
+
+        return self.execute_query(query)
+
     def rate_package(self, user, package_id):
         # Generate query to get package URL
         query = f"""
@@ -309,9 +340,9 @@ class Database:
                         clean_url = result.strip()
                         clean_url = scorer.src.url_handler.get_github_url(clean_url)
                         repo = analyze_repo(clean_url, z)
-                z.close()                
-        del z                            
-        
+                z.close()
+        del z
+
         #to distinguish whether its ingestible
         if repo.flag_check() is True:
             Ingestible = True
@@ -339,15 +370,15 @@ class Database:
                         bigquery.SchemaField("bus_factor", "FLOAT", mode="REQUIRED"),
                         bigquery.SchemaField("maintainer", "FLOAT", mode="REQUIRED"),
                         bigquery.SchemaField("license", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("dependency", "FLOAT", mode="REQUIRED"),               
+                        bigquery.SchemaField("dependency", "FLOAT", mode="REQUIRED"),
                     ],
-                ),    
+                ),
             ]
 
             table = bigquery.Table(f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", schema=schema)
             table = query.create_table(table)
-        
-   
+
+
         #contents to insert
         rows_to_insert = [
             {
@@ -359,20 +390,20 @@ class Database:
                     "correctness": repo.CORRECTNESS,
                     "bus_factor": repo.BUS_FACTOR,
                     "maintainer": repo.RESPONSIVENESS,
-                    "license": repo.LICENSE,                 
+                    "license": repo.LICENSE,
                     "dependency": repo.FRACTION_DEPENDENCY,
                 },
             }
         ]
-    
+
         errors = query.insert_rows_json(
             f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", rows_to_insert
         )
-    
+
         if errors == []:
             print("New rows have been inserted")
         else:
-            print("Encountered errors while inserting rows: {}".format(errors))          
+            print("Encountered errors while inserting rows: {}".format(errors))
 
         return 'done'
 

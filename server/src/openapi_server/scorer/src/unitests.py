@@ -4,11 +4,8 @@ tot_coverage = coverage.coverage()
 tot_coverage.start()
 
 # Below, import the functions that shoule be tested
-import tempfile # pragma: no cover
-import logging # pragma: no cover
 import sys # pragma: no cover
 import os # pragma: no cover
-import git # pragma: no cover
 from bus_factor import bus_factor # pragma: no cover
 from file_parser import file_parser # pragma: no cover
 from main import analyze_repo # pragma: no cover
@@ -19,7 +16,7 @@ from correctness import correctness # pragma: no cover
 from responsiveness import responsiveness # pragma: no cover
 from url_handler import get_github_url # pragma: no cover
 from dotenv import load_dotenv # pragma: no cover
-import repoMetrics  # pragma: no cover
+
 
 # ----------------------------------------------------------------------
 def test_all():

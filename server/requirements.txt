@@ -38,3 +38,4 @@ google-cloud-bigquery
 pytest
 coverage
 testresources
+tempfile
