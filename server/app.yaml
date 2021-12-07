@@ -7,3 +7,4 @@ entrypoint: python3 -m openapi_server
 env_variables:
   GOOGLE_CLOUD_PROJECT: ece-461-proj-2-24
   BIGQUERY_DATASET: module_registry
+  GITHUB_TOKEN: ${{ secrets.TOKEN }}
