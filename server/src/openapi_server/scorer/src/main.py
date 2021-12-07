@@ -6,12 +6,12 @@ import os  # pragma: no cover
 import sys  # pragma: no cover
 from dotenv import load_dotenv  # pragma: no cover
 import shutil  # pragma: no cover
-import repoMetrics  # pragma: no cover
+from openapi_server.scorer.src import repoMetrics  # pragma: no cover
 import zipfile
 
 # import June's code here
-from metric_helper import metric_helper  # pragma: no cover
-import url_handler  # pragma: no cover
+from openapi_server.scorer.src.metric_helper import metric_helper  # pragma: no cover
+from openapi_server.scorer.src import url_handler  # pragma: no cover
 
 # import Easton's code here
 load_dotenv()
@@ -59,28 +59,28 @@ def analyze_repo(url):
 
     dependency_list = {}
     dep_flag = False
-    for filename in os.listdir(cur_repo.dir):
-        if not os.path.isdir(filename):
-            with open(filename, "r") as cur_file:
+    for filename in os.listdir(cur_repo.dir.name):
+        if not os.path.isdir(os.path.join(cur_repo.dir.name, filename)):
+            with open(os.path.join(cur_repo.dir.name, filename), "r") as cur_file:
                 for line in cur_file:
                     if dep_flag is True:
-                        if "}" in str(line):
+                        if "}" in line:
                             pass
                         else:
-                            result = str(line, 'utf-8')
+                            result = line
                             dependency = result.rstrip().split(',')[0].split(' ')[4].strip('\"').rstrip(':').rstrip('"')
                             version = result.rstrip().split(',')[0].split(' ')[5].strip('\"')
                             dependency_list.update({dependency: version})
-                    if "dependencies" in str(line):
+                    if "dependencies" in line:
                         dep_flag = True
-                    if dep_flag is True and "}" in str(line):
+                    if dep_flag is True and "}" in line:
                         dep_flag = False
 
     # Initialize base64 repo contents
     base64_contents = "base64encodedfile"
 
     # Set up temporary file name for zip file
-    temp_file = tempfile.TemporaryFile()
+    temp_file = tempfile.NamedTemporaryFile()
 
     # Set up zipfile
     zip_file = zipfile.ZipFile(temp_file.name, "w", zipfile.ZIP_DEFLATED)
@@ -94,7 +94,6 @@ def analyze_repo(url):
 
     # Clean up
     zip_file.close()
-    temp_file.cleanup()
 
     met_help = metric_helper()
     met_help.get_api_stuff(token, clean_url, cur_repo.dir.name)

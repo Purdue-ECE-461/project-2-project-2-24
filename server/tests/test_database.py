@@ -80,6 +80,14 @@ def test_update_package(default_user, package_id, package):
     assert not isinstance(metadata, Error)
 
 
+def test_rate_package(package_id):
+    print("\nTESTING: Rate package")
+    print()
+    rating = db.rate_package(package_id=package_id)
+    print("Package rating:", rating)
+    assert not isinstance(rating, Error)
+
+
 def test_upload_js_program(package_id, js_program):
     print("\nTESTING: Upload js program")
     print()

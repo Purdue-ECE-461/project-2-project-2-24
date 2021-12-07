@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import base64
 import datetime
+import json
 import tempfile
 import zipfile
 from re import L
@@ -33,7 +34,7 @@ import time
 PACKAGE_PAGE_SIZE = 10
 MAX_TOKEN_USES = 1000
 MAX_TOKEN_AGE = 10
-
+SCHEMAS_DIR = os.path.join(os.getcwd(), "src", "openapi_server", "database", "schemas")
 
 class Database:
     def __init__(self):
@@ -69,7 +70,7 @@ class Database:
         download_user_id = user.id
         if download_user_id is None:
             return Error(code=500, message="Could not find ID of downloading user!!")
-        
+
         #Generate Query
         query = f"""
         SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
@@ -82,15 +83,15 @@ class Database:
 
         if isinstance(results, Error):
             return results
-        
+
         elif not len(results):
             return Error(code=404 , message="Package not found")
 
         if "script" in results[0].keys():
             js_program = results[0]["script"]
         else:
-            js_program = ""    
-        
+            js_program = ""
+
         downloaded_package = Package(metadata=PackageMetadata(name=results[0]["name"],
                                                               version=results[0]["version"],
                                                               id=results[0]["id"],
@@ -99,9 +100,9 @@ class Database:
                                      data=PackageData(content=results[0]["zip"],
                                                       url=results[0]["url"],
                                                       js_program=js_program))
-    
+
         return downloaded_package
-    
+
     def update_package(self, user, package_id, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
@@ -287,6 +288,26 @@ class Database:
 
         return output
 
+    def get_package_url_from_id(self, package_id):
+        # Generate query to get package URL
+        query = f"""
+                SELECT url FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+                WHERE id = "{package_id}"
+                """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        elif not len(results):
+            return Error(code=404, message="Package not found!")
+
+        package_url = results[0]["url"]
+        if package_url is None or package_url == "":
+            return Error(code=500, message="URL of package unknown!")
+
+        return package_url
+
     # ________________________________________________________________________________________________________________
     #                                                   RATINGS
     # ________________________________________________________________________________________________________________\
@@ -307,105 +328,36 @@ class Database:
 
         return self.execute_query(query)
 
-    def rate_package(self, user, package_id):
-        # Generate query to get package URL
-        query = f"""
-        SELECT url FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
-        WHERE id = "{package_id}"
-        """
+    def rate_package(self, package_id):
+        # Get package url
+        package_url = self.get_package_url_from_id(package_id)
 
-        results = self.execute_query(query)
+        if isinstance(package_url, Error):
+            return package_url
+        elif package_url == utils.INVALID_CONTENTS_MESSAGE:
+            return Error(code="400", message="Contents of package is not a valid base64 string!")
+        elif package_url == utils.NO_URL_MESSAGE:
+            return Error(code="500", message="URL of package could not be detected from contents!")
 
-        if isinstance(results, Error):
-            return results
-        elif not len(results):
-            return Error(code=404, message="Package not found!")
+        # Get package rating
+        repo, repo_contents = scorer_main.analyze_repo(package_url)
 
-        package_url = results[0]["url"]
-        if package_url is None or package_url == "":
-            return Error(code=500, message="URL of package unknown!")
+        # Upload rating
+        rating_upload = self.upload_rating_from_repo(repo, package_id)
+        if isinstance(rating_upload, Error):
+            return Error(code="500", message="Could not upload repo rating!!")
 
-        # TODO: Move to package upload to populate URL field
-        # metric calc using scorer/src : _init_py required
-        z = zipfile.ZipFile(zip)
-
-        # TODO: Refactor so scorer is in the server code
-
-        for filename in z.namelist():
-            if not os.path.isdir(filename):
-                for line in z.open(filename):
-                    if "homepage" in str(line):
-                        result = str(line, 'utf-8')
-                        result = result.rstrip().split(',')[0].split(' ')[3].strip('\"')
-                        clean_url = result.strip()
-                        clean_url = scorer.src.url_handler.get_github_url(clean_url)
-                        repo = analyze_repo(clean_url, z)
-                z.close()
-        del z
-
-        #to distinguish whether its ingestible
-        if repo.flag_check() is True:
-            Ingestible = True
-
-        #ID: #what should be in table_ID?
-        PROJECT_ID = "ece-461-proj-2-24"
-        DATASET_ID = "your_dataset"
-        TABLE_ID = "ece-461-proj-2-24:module_registry.ratings"
-
-        # TODO: Move to common function and run when server is initialized
-        #create table
-        #check whether table already exists
-        if(query.list_tables()):
-            schema = [
-                bigquery.SchemaField("user_id", "INTEGER", mode="REQUIRED"),
-                bigquery.SchemaField("package_id", "STRING", mode="REQUIRED"),
-                bigquery.SchemaField(
-                    "scores",
-                    "RECORD",
-                    mode="REQUIRED",
-                    fields=[
-                        bigquery.SchemaField("net_score", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("ramp_up", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("correctness", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("bus_factor", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("maintainer", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("license", "FLOAT", mode="REQUIRED"),
-                        bigquery.SchemaField("dependency", "FLOAT", mode="REQUIRED"),
-                    ],
-                ),
-            ]
-
-            table = bigquery.Table(f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", schema=schema)
-            table = query.create_table(table)
-
-
-        #contents to insert
-        rows_to_insert = [
-            {
-                "user_ID": user.id,
-                "package_id": package_id,
-                "scores": {
-                    "net_score": repo.overall_score,
-                    "ramp_up": repo.RAMP_UP,
-                    "correctness": repo.CORRECTNESS,
-                    "bus_factor": repo.BUS_FACTOR,
-                    "maintainer": repo.RESPONSIVENESS,
-                    "license": repo.LICENSE,
-                    "dependency": repo.FRACTION_DEPENDENCY,
-                },
-            }
-        ]
-
-        errors = query.insert_rows_json(
-            f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}", rows_to_insert
+        # Return repo rating
+        repo_rating = PackageRating(
+            bus_factor=repo.metric_scores[repo.BUS_FACTOR],
+            correctness=repo.metric_scores[repo.CORRECTNESS],
+            ramp_up=repo.metric_scores[repo.RAMP_UP],
+            responsive_maintainer=repo.metric_scores[repo.RESPONSIVENESS],
+            license_score=repo.metric_scores[repo.LICENSE],
+            good_pinning_practice=repo.metric_scores[repo.FRACTION_DEPENDENCY]
         )
 
-        if errors == []:
-            print("New rows have been inserted")
-        else:
-            print("Encountered errors while inserting rows: {}".format(errors))
-
-        return 'done'
+        return repo_rating
 
     # ________________________________________________________________________________________________________________
     #                                                   SCRIPTS
@@ -679,15 +631,34 @@ class Database:
     #                                                   COMMON
     # ________________________________________________________________________________________________________________
 
+    def init_tables(self):
+        # Read JSON schemas
+        for schema_filename in os.listdir(SCHEMAS_DIR):
+            with open(os.path.join(SCHEMAS_DIR, schema_filename), "r") as schema_file:
+                schema_dict = json.load(schema_file)
+                schema = []
+                for column in schema_dict:
+                    schema.append(bigquery.SchemaField(
+                        column["name"],
+                        column["type"],
+                        mode=column["mode"],
+                        description=column["description"]
+                    ))
+                table = bigquery.Table(f"{os.environ['GOOGLE_CLOUD_PROJECT']}.{self.dataset.dataset_id}.{schema_filename.split('.')[-2]}", schema=schema)
+                self.client.create_table(table, exists_ok=True)
+
     def initialize(self):
+        # First ensure tables are properly set up
+        self.init_tables()
+
         # Initialize query
         query = f""
 
         # First add default user group
         query += f"""
-                    INSERT INTO ece-461-proj-2-24.module_registry.user_groups (id, name, upload, search, download, create_user)
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups (id, name, upload, search, download, create_user)
                     SELECT new_id, new_Name, new_upload, new_search, new_download, new_create_user FROM (SELECT 1 AS new_id, "Admins" AS new_name, TRUE AS new_upload, TRUE AS new_search, TRUE AS new_download, TRUE AS new_create_user)
-                    LEFT JOIN ece-461-proj-2-24.module_registry.user_groups
+                    LEFT JOIN {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups
                     ON id = new_id
                     WHERE id IS NULL;
                 """

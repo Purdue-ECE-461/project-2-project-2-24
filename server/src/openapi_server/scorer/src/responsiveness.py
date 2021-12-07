@@ -1,6 +1,5 @@
 import logging # pragma: no cover
-from api import * # pragma: no cover
-from metric_helper import metric_helper # pragma: no cover
+from openapi_server.scorer.src.api import * # pragma: no cover
 import datetime # pragma: no cover
 
 # ---avg time all closed issues were open

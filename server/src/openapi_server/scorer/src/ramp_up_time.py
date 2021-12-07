@@ -5,14 +5,13 @@
 # Learned the detect method of chardet from https://chardet.readthedocs.io/en/latest/usage.html#example-using-the-detect-function
 
 from logging import log
+import logging
+import os
+import chardet
+from openapi_server.scorer.src.file_parser import file_parser
 
 
 def ramp_up_time(dir_check):
-    import logging
-    import os
-    import chardet
-    from file_parser import file_parser
-
     if os.path.exists(dir_check) == False:
         return -1
 

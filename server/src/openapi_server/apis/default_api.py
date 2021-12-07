@@ -309,7 +309,7 @@ async def package_rate(
         err = Error(code=401, message="Not authorized to rate a package!")
         response.status_code = err.code
         return err
-    rating = db.rate_package(user, id)
+    rating = db.rate_package(id)
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):

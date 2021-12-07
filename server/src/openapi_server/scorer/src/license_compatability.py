@@ -3,7 +3,7 @@
 # Use following as guides: 
 #   http://www.gnu.org/licenses/gpl-faq.html#AllCompatibility
 #   https://www.whitesourcesoftware.com/resources/blog/license-compatibility/
-from total_data_helper import total_data_helper # pragma: no cover
+from openapi_server.scorer.src.total_data_helper import total_data_helper # pragma: no cover
 import logging # pragma: no cover
 
 def license_compatability(repo_dir):
