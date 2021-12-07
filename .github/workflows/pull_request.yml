@@ -83,11 +83,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up environment variables
+        run: |
+          echo $'env_variables:\n  GOOGLE_CLOUD_PROJECT: ${{secrets.GOOGLE_PROJECT_ID}}\n  BIGQUERY_DATASET: module_registry\n  GITHUB_TOKEN: ${{secrets.TOKEN}}' >> server/env_variables.yaml
       - name: Deply to google engine
         uses: google-github-actions/deploy-appengine@v0.4.0
         with:
           project_id: ${{secrets.GOOGLE_PROJECT_ID}}
-          github_token: ${{ secrets.TOKEN }}
           version: dev
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
