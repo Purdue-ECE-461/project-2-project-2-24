@@ -9,8 +9,13 @@ from openapi_server.scorer.src import url_handler
 INVALID_CONTENTS_MESSAGE = "INVALID CONTENT ENCODING!"
 NO_URL_MESSAGE = "NO PACKAGE URL DETECTED"
 
+
 def db_hash(content):
     return hashlib.sha256(content.encode()).hexdigest()
+
+
+def db_b64_encode(content):
+    return base64.b64encode(content).decode("utf-8")
 
 
 def get_url_from_content(content):

@@ -62,6 +62,14 @@ def test_upload_package(default_user, package):
     metadata = db.upload_package(user=default_user, package=package)
     print("Uploaded metadata:", metadata)
     assert isinstance(metadata, PackageMetadata)
+
+
+def test_ingest_package(default_user, package_to_ingest):
+    print("\nTESTING: Ingest package")
+    print()
+    metadata = db.upload_package(user=default_user, package=package_to_ingest)
+    print("Ingested metadata:", metadata)
+    assert isinstance(metadata, PackageMetadata)
     
 
 def test_download_package(default_user, package_id):

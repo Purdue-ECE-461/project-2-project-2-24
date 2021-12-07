@@ -328,7 +328,32 @@ class Database:
 
         return self.execute_query(query)
 
+    def get_rating_for_package(self, package_id):
+        # Generate query
+        query = f"""
+            SELECT * FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings
+            WHERE package_id = "{package_id}"
+        """
+
+        return self.execute_query(query)
+
     def rate_package(self, package_id):
+        # First check if package has an existing rating
+        existing_rating = self.get_rating_for_package(package_id)
+
+        if isinstance(existing_rating, Error):
+            return existing_rating
+        elif len(existing_rating) > 0:
+            repo_rating = PackageRating(
+                bus_factor=existing_rating[0]["bus_factor"],
+                correctness=existing_rating[0]["correctness"],
+                ramp_up=existing_rating[0]["ramp_up"],
+                responsive_maintainer=existing_rating[0]["maintainer"],
+                license_score=existing_rating[0]["license"],
+                good_pinning_practice=existing_rating[0]["dependency"]
+            )
+            return repo_rating
+
         # Get package url
         package_url = self.get_package_url_from_id(package_id)
 

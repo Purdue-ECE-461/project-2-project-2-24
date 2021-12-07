@@ -13,6 +13,8 @@ import zipfile
 from openapi_server.scorer.src.metric_helper import metric_helper  # pragma: no cover
 from openapi_server.scorer.src import url_handler  # pragma: no cover
 
+from openapi_server.database import utils
+
 # import Easton's code here
 load_dotenv()
 token = os.getenv("GITHUB_TOKEN")
@@ -67,10 +69,11 @@ def analyze_repo(url):
                         if "}" in line:
                             pass
                         else:
-                            result = line
-                            dependency = result.rstrip().split(',')[0].split(' ')[4].strip('\"').rstrip(':').rstrip('"')
-                            version = result.rstrip().split(',')[0].split(' ')[5].strip('\"')
-                            dependency_list.update({dependency: version})
+                            dep_segments = line.rstrip().split(',')[0].split(' ')
+                            if len(dep_segments) >= 6:
+                                dependency = dep_segments[4].strip('\"').rstrip(':').rstrip('"')
+                                version = dep_segments[5].strip('\"')
+                                dependency_list.update({dependency: version})
                     if "dependencies" in line:
                         dep_flag = True
                     if dep_flag is True and "}" in line:
@@ -90,7 +93,7 @@ def analyze_repo(url):
 
     # Get base64 contents of zip file
     with open(temp_file.name, "rb") as file:
-        base64_contents = base64.b64encode(file.read())
+        base64_contents = utils.db_b64_encode(file.read())
 
     # Clean up
     zip_file.close()
