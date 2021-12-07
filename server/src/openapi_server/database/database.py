@@ -107,6 +107,11 @@ class Database:
         # Get metadata and data
         metadata, data = package.metadata, package.data
 
+        # Get user id
+        update_user_id = user.id
+        if update_user_id is None:
+            return Error(code=500, message="Could not find ID of updating user!!")
+
         # Name, version, and ID must match
         name = metadata.name
         version = metadata.version
@@ -117,22 +122,32 @@ class Database:
             return Error(code=403, message="Supplied ID (" + package_id + ") does not match ID in registry (" + existing_package_id + ")!")
         metadata.id = package_id
 
-        # Update is only for content
+        # Update with content or based on URL?
         content = data.content
-        if content is None:
-            return Error(code=400, message="Missing Content for package update!")
-
-        # Get user id
-        upload_user_id = user.id
-        if upload_user_id is None:
-            return Error(code=500, message="Could not find ID of uploading user!!")
+        url = data.url
+        if content is None and url is not None:
+            # Update with ingest
+            repo, content = scorer_main.analyze_repo(url)
+            if not repo.flag_check():
+                return Error(code="400", message="Updated package scores too low, and is therefore not ingestible!")
+            rating_upload = self.update_rating_from_repo(repo, package_id)
+            if isinstance(rating_upload, Error):
+                return Error(code="500", message="Could not update repo rating!!")
+        elif content is not None and url is None:
+            # Update with content
+            url = utils.get_url_from_content(content)
+        elif content is not None and url is not None:
+            return Error(code=400, message="Cannot provide both Content and URL in the same request!")
+        else:
+            # Both are not provided
+            return Error(code=400, message="Missing URL or Content for update!")
 
         # Generate query
         query = f"""
-                    UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages 
-                    SET upload_user_id = {upload_user_id}, zip = "{content}"
-                    WHERE id = "{metadata.id}"
-                """
+            UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+            SET url = "{url}", upload_user_id = {update_user_id}, zip = "{content}"
+            WHERE id = "{package_id}"
+        """
 
         results = self.execute_query(query)
 
@@ -185,28 +200,25 @@ class Database:
         url = data.url
         if content is None and url is not None:
             # Ingest package query
-            repo, repo_contents = scorer_main.analyze_repo(url)
+            repo, content = scorer_main.analyze_repo(url)
             if not repo.flag_check():
                 return Error(code="400", message="Package scores too low, and is therefore not ingestible!")
             rating_upload = self.upload_rating_from_repo(repo, package_id)
             if isinstance(rating_upload, Error):
                 return Error(code="500", message="Could not upload repo rating!!")
-            query = f"""
-                        INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{repo_contents}")
-                    """
         elif content is not None and url is None:
-            url = utils.get_url_from_content(content)
             # Upload package query
-            query = f"""
-                        INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
-                    """
+            url = utils.get_url_from_content(content)
         elif content is not None and url is not None:
             return Error(code=400, message="Cannot provide both Content and URL in the same request!")
         else:
             # Both are not provided
             return Error(code=400, message="Missing URL or Content!")
+
+        query = f"""
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+                    VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+                """
 
         results = self.execute_query(query)
 
@@ -325,6 +337,21 @@ class Database:
             {repo.metric_scores[repo.RESPONSIVENESS]}, {repo.metric_scores[repo.LICENSE]},
             {repo.metric_scores[repo.FRACTION_DEPENDENCY]})
         """
+
+        return self.execute_query(query)
+
+    def update_rating_from_repo(self, repo, package_id):
+        # Generate query
+        query = f"""
+                    UPDATE {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings
+                    SET net = {repo.overall_score}, ramp_up = {repo.metric_scores[repo.RAMP_UP]},
+                    correctness = {repo.metric_scores[repo.CORRECTNESS]},
+                    bus_factor = {repo.metric_scores[repo.BUS_FACTOR]},
+                    maintainer = {repo.metric_scores[repo.RESPONSIVENESS]},
+                    license = {repo.metric_scores[repo.LICENSE]},
+                    dependency = {repo.metric_scores[repo.FRACTION_DEPENDENCY]}
+                    WHERE package_id = "{package_id}"
+                """
 
         return self.execute_query(query)
 
