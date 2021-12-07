@@ -77,4 +77,5 @@ server/test_output.txt
 # .env files
 server/.env
 server/src/openapi_server/.env
+server/env_variables.yaml
 
