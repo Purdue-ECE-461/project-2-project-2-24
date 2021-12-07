@@ -276,29 +276,29 @@ class Database:
 
         return output
 
-    def rate_package(self, user, package_id, zip):
-        rate_user_id = user.id
-        if rate_user_id is None:
-            return Error(code=500, message="Could not find ID of downloading user!!")       
- 
-
+    def rate_package(self, user, package_id):
+        # Generate query to get package URL
         query = f"""
-        SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
-        left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
-        WHERE p.id = "{package_id}"
-
+        SELECT url FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+        WHERE id = "{package_id}"
         """
 
         results = self.execute_query(query)
 
         if isinstance(results, Error):
             return results
-        
         elif not len(results):
-            return Error(code=404 , message="Package not found")
-        
+            return Error(code=404, message="Package not found!")
+
+        package_url = results[0]["url"]
+        if package_url is None or package_url == "":
+            return Error(code=500, message="URL of package unknown!")
+
+        # TODO: Move to package upload to populate URL field
         # metric calc using scorer/src : _init_py required
-        z = zipfile.ZipFile(zip) 
+        z = zipfile.ZipFile(zip)
+
+        # TODO: Refactor so scorer is in the server code
 
         for filename in z.namelist():
             if not os.path.isdir(filename):
@@ -321,6 +321,7 @@ class Database:
         DATASET_ID = "your_dataset"
         TABLE_ID = "ece-461-proj-2-24:module_registry.ratings"
 
+        # TODO: Move to common function and run when server is initialized
         #create table
         #check whether table already exists
         if(query.list_tables()):
