@@ -1,12 +1,7 @@
-from api import * # pragma: no cover
-import os # pragma: no cover
-from pprint import pprint # pragma: no cover
-from dotenv import load_dotenv # pragma: no cover
+from openapi_server.scorer.src.api import * # pragma: no cover
 import logging # pragma: no cover
 import datetime # pragma: no cover
-import file_parser # pragma: no cover
-from total_data_helper import total_data_helper # pragma: no cover
-from time import time # pragma: no cover
+from openapi_server.scorer.src.total_data_helper import total_data_helper # pragma: no cover
 
 
 class metric_helper:

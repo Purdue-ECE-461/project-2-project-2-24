@@ -1,7 +1,7 @@
 
 var after = require('after');
 var Buffer = require('safe-buffer').Buffer
-var express = require('../')
+var express = require('./.')
   , request = require('supertest')
   , assert = require('assert');
 var onFinished = require('on-finished');

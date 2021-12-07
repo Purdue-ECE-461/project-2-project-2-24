@@ -1,6 +1,10 @@
 from __future__ import absolute_import
 
+import base64
 import datetime
+import json
+import tempfile
+import zipfile
 from re import L
 from google.cloud import bigquery
 from google.api_core.exceptions import BadRequest
@@ -19,6 +23,8 @@ from openapi_server.models.user_group import UserGroup
 
 from openapi_server.database import utils
 
+from openapi_server.scorer.src import main as scorer_main
+
 import os
 import hashlib
 import time
@@ -28,7 +34,7 @@ import time
 PACKAGE_PAGE_SIZE = 10
 MAX_TOKEN_USES = 1000
 MAX_TOKEN_AGE = 10
-
+SCHEMAS_DIR = os.path.join(os.getcwd(), "src", "openapi_server", "database", "schemas")
 
 class Database:
     def __init__(self):
@@ -64,7 +70,7 @@ class Database:
         download_user_id = user.id
         if download_user_id is None:
             return Error(code=500, message="Could not find ID of downloading user!!")
-        
+
         #Generate Query
         query = f"""
         SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
@@ -77,15 +83,15 @@ class Database:
 
         if isinstance(results, Error):
             return results
-        
+
         elif not len(results):
             return Error(code=404 , message="Package not found")
 
         if "script" in results[0].keys():
             js_program = results[0]["script"]
         else:
-            js_program = ""    
-        
+            js_program = ""
+
         downloaded_package = Package(metadata=PackageMetadata(name=results[0]["name"],
                                                               version=results[0]["version"],
                                                               id=results[0]["id"],
@@ -94,9 +100,9 @@ class Database:
                                      data=PackageData(content=results[0]["zip"],
                                                       url=results[0]["url"],
                                                       js_program=js_program))
-    
+
         return downloaded_package
-    
+
     def update_package(self, user, package_id, package):
         # Get metadata and data
         metadata, data = package.metadata, package.data
@@ -179,16 +185,22 @@ class Database:
         url = data.url
         if content is None and url is not None:
             # Ingest package query
-            # TODO: MUST RATE FIRST -> if net score greater than 0.5, then it is "ingestible" and gets added
+            repo, repo_contents = scorer_main.analyze_repo(url)
+            if not repo.flag_check():
+                return Error(code="400", message="Package scores too low, and is therefore not ingestible!")
+            rating_upload = self.upload_rating_from_repo(repo, package_id)
+            if isinstance(rating_upload, Error):
+                return Error(code="500", message="Could not upload repo rating!!")
             query = f"""
-                                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                                    VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, NULL)
-                                """
+                        INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
+                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{repo_contents}")
+                    """
         elif content is not None and url is None:
+            url = utils.get_url_from_content(content)
             # Upload package query
             query = f"""
                         INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages (id, name, url, version, sensitive, secret, upload_user_id, zip)
-                        VALUES ("{package_id}", "{name}", NULL, "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
+                        VALUES ("{package_id}", "{name}", "{url}", "{version}", {sensitive}, {secret}, {upload_user_id}, "{content}")
                     """
         elif content is not None and url is not None:
             return Error(code=400, message="Cannot provide both Content and URL in the same request!")
@@ -276,9 +288,101 @@ class Database:
 
         return output
 
+    def get_package_url_from_id(self, package_id):
+        # Generate query to get package URL
+        query = f"""
+                SELECT url FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+                WHERE id = "{package_id}"
+                """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        elif not len(results):
+            return Error(code=404, message="Package not found!")
+
+        package_url = results[0]["url"]
+        if package_url is None or package_url == "":
+            return Error(code=500, message="URL of package unknown!")
+
+        return package_url
+
     # ________________________________________________________________________________________________________________
     #                                                   RATINGS
-    # ________________________________________________________________________________________________________________
+    # ________________________________________________________________________________________________________________\
+
+    def upload_rating_from_repo(self, repo, package_id):
+        # Get new rating id
+        new_rating_id = self.gen_new_integer_id("ratings")
+
+        # Generate query
+        query = f"""
+            INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings
+            (id, package_id, net, ramp_up, correctness, bus_factor, maintainer, license, dependency)
+            VALUES ({new_rating_id}, "{package_id}", {repo.overall_score}, {repo.metric_scores[repo.RAMP_UP]},
+            {repo.metric_scores[repo.CORRECTNESS]}, {repo.metric_scores[repo.BUS_FACTOR]}, 
+            {repo.metric_scores[repo.RESPONSIVENESS]}, {repo.metric_scores[repo.LICENSE]},
+            {repo.metric_scores[repo.FRACTION_DEPENDENCY]})
+        """
+
+        return self.execute_query(query)
+
+    def get_rating_for_package(self, package_id):
+        # Generate query
+        query = f"""
+            SELECT * FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.ratings
+            WHERE package_id = "{package_id}"
+        """
+
+        return self.execute_query(query)
+
+    def rate_package(self, package_id):
+        # First check if package has an existing rating
+        existing_rating = self.get_rating_for_package(package_id)
+
+        if isinstance(existing_rating, Error):
+            return existing_rating
+        elif len(existing_rating) > 0:
+            repo_rating = PackageRating(
+                bus_factor=existing_rating[0]["bus_factor"],
+                correctness=existing_rating[0]["correctness"],
+                ramp_up=existing_rating[0]["ramp_up"],
+                responsive_maintainer=existing_rating[0]["maintainer"],
+                license_score=existing_rating[0]["license"],
+                good_pinning_practice=existing_rating[0]["dependency"]
+            )
+            return repo_rating
+
+        # Get package url
+        package_url = self.get_package_url_from_id(package_id)
+
+        if isinstance(package_url, Error):
+            return package_url
+        elif package_url == utils.INVALID_CONTENTS_MESSAGE:
+            return Error(code="400", message="Contents of package is not a valid base64 string!")
+        elif package_url == utils.NO_URL_MESSAGE:
+            return Error(code="500", message="URL of package could not be detected from contents!")
+
+        # Get package rating
+        repo, repo_contents = scorer_main.analyze_repo(package_url)
+
+        # Upload rating
+        rating_upload = self.upload_rating_from_repo(repo, package_id)
+        if isinstance(rating_upload, Error):
+            return Error(code="500", message="Could not upload repo rating!!")
+
+        # Return repo rating
+        repo_rating = PackageRating(
+            bus_factor=repo.metric_scores[repo.BUS_FACTOR],
+            correctness=repo.metric_scores[repo.CORRECTNESS],
+            ramp_up=repo.metric_scores[repo.RAMP_UP],
+            responsive_maintainer=repo.metric_scores[repo.RESPONSIVENESS],
+            license_score=repo.metric_scores[repo.LICENSE],
+            good_pinning_practice=repo.metric_scores[repo.FRACTION_DEPENDENCY]
+        )
+
+        return repo_rating
 
     # ________________________________________________________________________________________________________________
     #                                                   SCRIPTS
@@ -552,15 +656,34 @@ class Database:
     #                                                   COMMON
     # ________________________________________________________________________________________________________________
 
+    def init_tables(self):
+        # Read JSON schemas
+        for schema_filename in os.listdir(SCHEMAS_DIR):
+            with open(os.path.join(SCHEMAS_DIR, schema_filename), "r") as schema_file:
+                schema_dict = json.load(schema_file)
+                schema = []
+                for column in schema_dict:
+                    schema.append(bigquery.SchemaField(
+                        column["name"],
+                        column["type"],
+                        mode=column["mode"],
+                        description=column["description"]
+                    ))
+                table = bigquery.Table(f"{os.environ['GOOGLE_CLOUD_PROJECT']}.{self.dataset.dataset_id}.{schema_filename.split('.')[-2]}", schema=schema)
+                self.client.create_table(table, exists_ok=True)
+
     def initialize(self):
+        # First ensure tables are properly set up
+        self.init_tables()
+
         # Initialize query
         query = f""
 
         # First add default user group
         query += f"""
-                    INSERT INTO ece-461-proj-2-24.module_registry.user_groups (id, name, upload, search, download, create_user)
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups (id, name, upload, search, download, create_user)
                     SELECT new_id, new_Name, new_upload, new_search, new_download, new_create_user FROM (SELECT 1 AS new_id, "Admins" AS new_name, TRUE AS new_upload, TRUE AS new_search, TRUE AS new_download, TRUE AS new_create_user)
-                    LEFT JOIN ece-461-proj-2-24.module_registry.user_groups
+                    LEFT JOIN {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups
                     ON id = new_id
                     WHERE id IS NULL;
                 """

@@ -1,6 +1,6 @@
 
 var after = require('after');
-var express = require('../')
+var express = require('./.')
   , Router = express.Router
   , methods = require('methods')
   , assert = require('assert');

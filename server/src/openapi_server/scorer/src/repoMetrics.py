@@ -1,11 +1,10 @@
 # import metric functions # pragma: no cover
-from responsiveness import responsiveness # pragma: no cover
-from bus_factor import bus_factor # pragma: no cover
-from correctness import correctness # pragma: no cover
-from ramp_up_time import ramp_up_time # pragma: no cover
-from license_compatability import license_compatability # pragma: no cover
-from fraction_dependency import fraction_dependency # pragma: no cover
-from metric_helper import metric_helper # pragma: no cover
+from openapi_server.scorer.src.responsiveness import responsiveness # pragma: no cover
+from openapi_server.scorer.src.bus_factor import bus_factor # pragma: no cover
+from openapi_server.scorer.src.correctness import correctness # pragma: no cover
+from openapi_server.scorer.src.ramp_up_time import ramp_up_time # pragma: no cover
+from openapi_server.scorer.src.license_compatability import license_compatability # pragma: no cover
+from openapi_server.scorer.src.fraction_dependency import fraction_dependency # pragma: no cover
 import tempfile # pragma: no cover
 
 class Repository:

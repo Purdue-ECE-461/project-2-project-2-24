@@ -20,7 +20,7 @@
 from logging import log # pragma: no cover
 import os # pragma: no cover
 import logging # pragma: no cover
-from file_parser import file_parser # pragma: no cover
+from openapi_server.scorer.src.file_parser import file_parser # pragma: no cover
 import chardet # pragma: no cover
 
 

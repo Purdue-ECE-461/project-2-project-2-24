@@ -38,3 +38,6 @@ google-cloud-bigquery
 pytest
 coverage
 testresources
+beautifulsoup4
+gitpython
+pygithub

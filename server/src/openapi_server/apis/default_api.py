@@ -301,7 +301,15 @@ async def package_rate(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.search:
+        err = Error(code=401, message="Not authorized to rate a package!")
+        response.status_code = err.code
+        return err
+    rating = db.rate_package(id)
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):

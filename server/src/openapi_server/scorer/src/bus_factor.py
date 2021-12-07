@@ -1,7 +1,4 @@
 import logging # pragma: no cover
-from metric_helper import metric_helper # pragma: no cover
-import datetime # pragma: no cover
-import math # pragma: no cover
 
 # ---num lines of code vs num comments
 # ---length of readme (longer = better)

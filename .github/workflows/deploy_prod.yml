@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up environment variables
+          run: |
+            echo $'env_variables:\n  GOOGLE_CLOUD_PROJECT: ${{secrets.GOOGLE_PROJECT_ID}}\n  BIGQUERY_DATASET: module_registry\n  GITHUB_TOKEN: ${{secrets.TOKEN}}' >> server/env_variables.yaml
       - name: Deply to google engine
         uses: google-github-actions/deploy-appengine@v0.4.0
         with:
@@ -19,15 +22,3 @@ jobs:
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
           flags: --no-cache
           deliverables: server/app.yaml
-      - name: Perform Scan
-        uses: ShiftLeftSecurity/scan-action@master
-        with:
-              type: "python,java"
-#        env:
-#              WORKSPACE: https://github.com/${{ REPO }}/blob/${{ github.sha }}
-#              GITHUB_TOKEN: ${{ secrets.TOKEN }}
-#              SCAN_AUTO_BUILD: true
-      - uses: actions/upload-artifact@v1
-        with:
-          name: reports
-          path: reports
