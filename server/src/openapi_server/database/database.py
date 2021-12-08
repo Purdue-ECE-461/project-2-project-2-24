@@ -65,18 +65,81 @@ class Database:
     #                                                   PACKAGES
     # ________________________________________________________________________________________________________________
 
-    def download_package(self, user, package_id):
-        # Get user id
-        download_user_id = user.id
-        if download_user_id is None:
-            return Error(code=500, message="Could not find ID of downloading user!!")
-
-        #Generate Query
+    def delete_package(self, package_id):
+        # Generate query
         query = f"""
-        SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
-        left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
-        WHERE p.id = "{package_id}"
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+            WHERE id = "{package_id}"
+        """
 
+        result = self.execute_query(query)
+
+        if isinstance(result, Error):
+            return result
+        elif len(result) > 0:
+            return {"message": "Package successfully deleted!"}
+        else:
+            return Error(code=404, message="Could not find package!")
+
+    def delete_package_by_name(self, name):
+        # Generate query
+        query = f"""
+            DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
+            WHERE name = "{name}"
+        """
+
+        result = self.execute_query(query)
+
+        if isinstance(result, Error):
+            return result
+        elif len(result) > 0:
+            return {"message": "All versions of package successfully deleted!"}
+        else:
+            return Error(code=404, message="Could not find package!")
+
+    def get_package_by_name(self, package_name):
+        # Generate query
+        query = f"""
+            SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id
+            FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
+            left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
+            WHERE p.name = "{package_name}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        elif len(results) > 0:
+            package_versions = []
+            for row in results:
+                js_program = ""
+                if "script" in row.keys():
+                    js_program = row["script"]
+                package_versions.append(Package(
+                    metadata=PackageMetadata(
+                        name=row["name"],
+                        version=row["version"],
+                        id=row["id"],
+                        sensitive=row["sensitive"],
+                        secret=row["secret"]
+                    ),
+                    data=PackageData(
+                        content=row["zip"],
+                        url=row["url"],
+                        js_program=js_program
+                    )
+                ))
+            return package_versions
+        else:
+            return Error(code=404, message="Package not found!")
+
+    def download_package(self, package_id):
+        # Generate query
+        query = f"""
+            SELECT p.id, p.version, p.name, p.sensitive, p.secret, p.url, p.zip, s.script, s.package_id FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages p 
+            left join {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.scripts s on p.id = s.package_id
+            WHERE p.id = "{package_id}"
         """
 
         results = self.execute_query(query)
@@ -566,37 +629,19 @@ class Database:
     #                                                USER GROUPS
     # ________________________________________________________________________________________________________________
 
-    def create_new_user_group(self, token, user_group):
-        # TODO FINISH THIS FUNCTION
-        # TODO MOVE PERMISSION CHECK TO DEFAULT API FILE
-        # Is user allowed to create a new UserGroup?
-        user = self.get
-        if not user.is_admin:
-            return Error(code=401, message="Must be admin to create new user")
-
-        # Generate id for new user
-        new_user_id = self.gen_new_integer_id("users")
-
-        # Get username
-        new_user_username = new_user.name
-
-        # Get password
-        new_user_password_hash = utils.db_hash(password)
-
-        # Get user group id
-        user_group_id = self.get_user_group_id(user_group)
-        if user_group_id is None:
-            return Error(code=400, message="Cannot find user group with provided name! User not created!")
+    def create_new_user_group(self, user_group):
+        # Generate id for new user group
+        user_group.id = self.gen_new_integer_id("user_groups")
 
         # Generate query
         query = f"""
-                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.users (id, username, hash_pass, user_group_id)
-                    VALUES ({new_user_id}, "{new_user_username}", "{new_user_password_hash}", "{user_group_id}")
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_gruops
+                    (id, name, upload, search, download, create_user)
+                    VALUES ({user_group.id}, "{user_group.name}", {user_group.upload}, {user_group.search},
+                    {user_group.download}, {user_group.create_user})
                 """
 
-        results = self.execute_query(query)
-
-        return results
+        return self.execute_query(query)
 
     def get_user_group_id(self, group_name):
         # Generate query
@@ -616,10 +661,10 @@ class Database:
     #                                                   USERS
     # ________________________________________________________________________________________________________________
 
-    def create_new_user(self, user, new_user, password, user_group_name):
+    def create_new_user(self, user, new_user):
         # Is user allowed to create a new user?
-        if not user.is_admin:
-            return Error(code=401, message="Must be admin to create new user")
+        if not user.user_group.create_user:
+            return Error(code=401, message="Not authorized to create a new user!")
 
         # Generate id for new user
         new_user_id = self.gen_new_integer_id("users")
@@ -628,12 +673,10 @@ class Database:
         new_user_username = new_user.name
 
         # Get password
-        new_user_password_hash = utils.db_hash(password)
+        new_user_password_hash = utils.db_hash(new_user.user_authentication_info.password)
 
         # Get user group id
-        user_group_id = self.get_user_group_id(user_group_name)
-        if isinstance(user_group_id, Error):
-            return user_group_id
+        user_group_id = new_user.user_group.id
 
         # Generate query
         query = f"""

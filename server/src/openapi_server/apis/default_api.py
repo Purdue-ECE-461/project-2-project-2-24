@@ -76,12 +76,23 @@ async def create_user_group(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.create_user:
+        err = Error(code=401, message="Not authorized to create a new user group!")
+        response.status_code = err.code
+        return err
+    result = db.create_new_user_group(user_group)
+    if isinstance(result, Error):
+        response.status_code = result.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return result
 
 
 @router.delete(
@@ -110,6 +121,9 @@ async def delete_user_group(
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    err = Error(code="501", message="Not implemented!")
+    response.status_code = err.code
+    return err
 
 
 @router.get(
@@ -138,6 +152,9 @@ async def get_user_group(
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    err = Error(code="501", message="Not implemented!")
+    response.status_code = err.code
+    return err
 
 
 @router.get(
@@ -152,7 +169,9 @@ async def get_user_groups(
     response: Response
 ) -> List[UserGroup]:
     """Gets a list of all UserGroup entities."""
-    ...
+    err = Error(code="501", message="Not implemented!")
+    response.status_code = err.code
+    return err
 
 
 @router.delete(
@@ -175,12 +194,23 @@ async def package_by_name_delete(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to delete a package!")
+        response.status_code = err.code
+        return err
+    result = db.delete_package_by_name(name)
+    if isinstance(result, Error):
+        response.status_code = result.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return result
 
 
 @router.get(
@@ -204,12 +234,23 @@ async def package_by_name_get(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.search:
+        err = Error(code=401, message="Not authorized to get a package!")
+        response.status_code = err.code
+        return err
+    package = db.get_package_by_name(name)
+    if isinstance(package, Error):
+        response.status_code = package.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return package
 
 
 @router.post(
@@ -273,12 +314,23 @@ async def package_delete(
     if isinstance(expired, Error):
         response.status_code = expired.code
         return expired
-    # TODO: DO STUFF HERE
+    user = db.get_user_from_token(token)
+    if isinstance(user, Error):
+        response.status_code = user.code
+        return user
+    if not user.user_group.upload:
+        err = Error(code=401, message="Not authorized to delete a package!")
+        response.status_code = err.code
+        return err
+    result = db.delete_package(id)
+    if isinstance(result, Error):
+        response.status_code = result.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return result
 
 
 @router.get(
@@ -310,11 +362,14 @@ async def package_rate(
         response.status_code = err.code
         return err
     rating = db.rate_package(id)
+    if isinstance(rating, Error):
+        response.status_code = rating.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    return rating
 
 
 @router.get(
@@ -345,15 +400,15 @@ async def package_retrieve(
         err = Error(code=401, message="Not authorized to retrieve a package!")
         response.status_code = err.code
         return err
-    results = db.download_package(user, id)
-    if isinstance(results, Error):
-        response.status_code = results.code
+    package = db.download_package(id)
+    if isinstance(package, Error):
+        response.status_code = package.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
-    return results
+    return package
   
       
 @router.put(
@@ -499,6 +554,9 @@ async def update_user_group(
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    err = Error(code="501", message="Not implemented!")
+    response.status_code = err.code
+    return err
 
 
 @router.post(
@@ -527,3 +585,6 @@ async def user_create(
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         return decrement
+    err = Error(code="501", message="Not implemented!")
+    response.status_code = err.code
+    return err
