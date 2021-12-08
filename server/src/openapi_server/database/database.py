@@ -67,6 +67,9 @@ class Database:
     # ________________________________________________________________________________________________________________
 
     def delete_package(self, package_id):
+        if not self.package_id_exists(package_id):
+            return Error(code=404, message="Could not find package!")
+
         # Generate query
         query = f"""
             DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
@@ -77,12 +80,13 @@ class Database:
 
         if isinstance(result, Error):
             return result
-        elif len(result) > 0:
-            return {"message": "Package successfully deleted!"}
         else:
-            return Error(code=404, message="Could not find package!")
+            return {"message": "Package with id '" + package_id + "' successfully deleted!"}
 
     def delete_package_by_name(self, name):
+        if not self.package_name_exists(name):
+            return Error(code=404, message="Could not find package!")
+
         # Generate query
         query = f"""
             DELETE FROM {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages
@@ -93,10 +97,8 @@ class Database:
 
         if isinstance(result, Error):
             return result
-        elif len(result) > 0:
-            return {"message": "All versions of package successfully deleted!"}
         else:
-            return Error(code=404, message="Could not find package!")
+            return {"message": "All versions of package '" + name + "' successfully deleted!"}
 
     def get_package_by_name(self, package_name):
         # Generate query
@@ -295,6 +297,19 @@ class Database:
         # Generate query
         query = f"""
             SELECT id from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE id = "{package_id}"
+        """
+
+        results = self.execute_query(query)
+
+        if isinstance(results, Error):
+            return results
+        else:
+            return len(results) > 0
+
+    def package_name_exists(self, package_name):
+        # Generate query
+        query = f"""
+            SELECT name from {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.packages WHERE name = "{package_name}"
         """
 
         results = self.execute_query(query)
