@@ -52,10 +52,12 @@ async def stringify_request(request):
 
 
 def token_from_auth(auth):
+    token = ""
     try:
-        return auth.split()[-1]
+        token = auth.split()[-1]
     except:
-        return "unknown_token"
+        token = "unknown_token"
+    return token
 
 
 @router.put(
@@ -72,10 +74,12 @@ async def create_auth_token(
     response: Response,
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
+    logger.info("CREATE_AUTH_TOKEN REQUEST:\n")
     logger.info(await stringify_request(request))
     new_token = db.create_new_token(authentication_request)
     if isinstance(new_token, Error):
         response.status_code = new_token.code
+    logger.info(new_token)
     return new_token
 
 
@@ -94,20 +98,24 @@ async def create_user_group(
     user_group: UserGroup = Body(None, description="A new UserGroup to be created."),
 ) -> None:
     """Creates a new instance of a UserGroup."""
+    logger.info("CREATE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.create_user:
         err = Error(code=401, message="Not authorized to create a new user group!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     result = db.create_new_user_group(user_group)
     if isinstance(result, Error):
@@ -116,7 +124,9 @@ async def create_user_group(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(result)
     return result
 
 
@@ -135,21 +145,25 @@ async def delete_user_group(
     x_authorization: str = Header(None, description=""),
 ) -> None:
     """Deletes an existing UserGroup."""
+    logger.info("DELETE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     # TODO: DO STUFF HERE
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
     err = Error(code="501", message="Not implemented!")
     response.status_code = err.code
+    logger.warning(err)
     return err
 
 
@@ -168,21 +182,25 @@ async def get_user_group(
     x_authorization: str = Header(None, description=""),
 ) -> UserGroup:
     """Gets the details of a single instance of a UserGroup."""
+    logger.info("GET_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     # TODO: DO STUFF HERE
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
     err = Error(code="501", message="Not implemented!")
     response.status_code = err.code
+    logger.warning(err)
     return err
 
 
@@ -198,8 +216,10 @@ async def get_user_groups(
     response: Response
 ) -> List[UserGroup]:
     """Gets a list of all UserGroup entities."""
+    logger.info("GET_USER_GROUPS REQUEST:\n")
     err = Error(code="501", message="Not implemented!")
     response.status_code = err.code
+    logger.warning(err)
     return err
 
 
@@ -218,20 +238,24 @@ async def package_by_name_delete(
     name: str = Path(None, description=""),
     x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info("PACKAGE_BY_NAME_DELETE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.upload:
         err = Error(code=401, message="Not authorized to delete a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     result = db.delete_package_by_name(name)
     if isinstance(result, Error):
@@ -240,7 +264,9 @@ async def package_by_name_delete(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(result)
     return result
 
 
@@ -260,20 +286,24 @@ async def package_by_name_get(
     x_authorization: str = Header(None, description=""),
 ) -> List[PackageHistoryEntry]:
     """Return the history of this package (all versions)."""
+    logger.info("PACKAGE_BY_NAME_GET REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.search:
         err = Error(code=401, message="Not authorized to get a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     package = db.get_package_by_name(name)
     if isinstance(package, Error):
@@ -282,7 +312,9 @@ async def package_by_name_get(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(package)
     return package
 
 
@@ -303,20 +335,24 @@ async def package_create(
     x_authorization: str = Header(None, description=""),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
+    logger.info("PACKAGE_CREATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.upload:
         err = Error(code=401, message="Not authorized to upload a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     metadata = db.upload_package(user, package)
     if isinstance(metadata, Error):
@@ -325,7 +361,9 @@ async def package_create(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(metadata)
     return metadata
 
 
@@ -344,20 +382,24 @@ async def package_delete(
     id: str = Path(None, description="Package ID"),
     x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info("PACKAGE_DELETE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.upload:
         err = Error(code=401, message="Not authorized to delete a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     result = db.delete_package(id)
     if isinstance(result, Error):
@@ -366,7 +408,9 @@ async def package_delete(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(result)
     return result
 
 
@@ -385,20 +429,24 @@ async def package_rate(
     id: str = Path(None, description=""),
     x_authorization: str = Header(None, description=""),
 ) -> PackageRating:
+    logger.info("PACKAGE_RATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.search:
         err = Error(code=401, message="Not authorized to rate a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     rating = db.rate_package(id)
     if isinstance(rating, Error):
@@ -407,7 +455,9 @@ async def package_rate(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(rating)
     return rating
 
 
@@ -426,20 +476,24 @@ async def package_retrieve(
     x_authorization: str = Header(None, description=""),
 ) -> Package:
     """Return this package."""
+    logger.info("PACKAGE_RETRIEVE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.download:
         err = Error(code=401, message="Not authorized to retrieve a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     package = db.download_package(id)
     if isinstance(package, Error):
@@ -448,7 +502,9 @@ async def package_retrieve(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(package)
     return package
   
       
@@ -469,20 +525,24 @@ async def package_update(
     x_authorization: str = Header(None, description=""),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
+    logger.info("PACKAGE_UPDATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.upload:
         err = Error(code=401, message="Not authorized to update a package!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     results = db.update_package(user, id, package)
     if isinstance(results, Error):
@@ -491,7 +551,9 @@ async def package_update(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(results)
     return results
 
 
@@ -512,21 +574,25 @@ async def packages_list(
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
+    logger.info("PACKAGES_LIST REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     # Now check if user is authorized to search database
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.search:
         err = Error(code=401, message="Not authorized to search the registry!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     packages = db.get_page_of_packages(package_query, offset)
     if isinstance(packages, Error):
@@ -535,7 +601,9 @@ async def packages_list(
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
+    logger.info(packages)
     return packages
 
 
@@ -552,25 +620,30 @@ async def registry_reset(
     response: Response,
     x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info("REGISTRY_RESET REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     user = db.get_user_from_token(token)
     if isinstance(user, Error):
         response.status_code = user.code
+        logger.warning(user)
         return user
     if not user.user_group.create_user:
         err = Error(code=401, message="Not authorized to reset the registry!")
         response.status_code = err.code
+        logger.warning(err)
         return err
     reset = db.reset_registry()
     if isinstance(reset, Error):
         response.status_code = reset.code
     # Don't decrement token for registry reset
+    logger.info(reset)
     return reset
 
 
@@ -590,21 +663,25 @@ async def update_user_group(
     user_group: UserGroup = Body(None, description="Updated UserGroup information."),
 ) -> None:
     """Updates an existing UserGroup."""
+    logger.info("UPDATE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     # TODO: DO STUFF HERE
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
     err = Error(code="501", message="Not implemented!")
     response.status_code = err.code
+    logger.warning(err)
     return err
 
 
@@ -623,19 +700,23 @@ async def user_create(
     user: User = Body(None, description="New user to register."),
 ) -> User:
     """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
+    logger.info("CREATE_USER REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
         response.status_code = expired.code
+        logger.warning(expired)
         return expired
     # TODO: DO STUFF HERE
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
+        logger.warning(decrement)
         return decrement
     err = Error(code="501", message="Not implemented!")
     response.status_code = err.code
+    logger.warning(err)
     return err
