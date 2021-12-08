@@ -487,7 +487,6 @@ async def packages_list(
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
-    logger.info(locals())
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
