@@ -52,7 +52,10 @@ async def stringify_request(request):
 
 
 def token_from_auth(auth):
-    return auth.split()[-1]
+    try:
+        return auth.split()[-1]
+    except:
+        return "unknown_token"
 
 
 @router.put(
@@ -65,9 +68,11 @@ def token_from_auth(auth):
     tags=["default"],
 )
 async def create_auth_token(
+    request: Request,
     response: Response,
     authentication_request: AuthenticationRequest = Body(None, description=""),
 ) -> str:
+    logger.info(await stringify_request(request))
     new_token = db.create_new_token(authentication_request)
     if isinstance(new_token, Error):
         response.status_code = new_token.code
@@ -83,11 +88,13 @@ async def create_auth_token(
     summary="Create a UserGroup",
 )
 async def create_user_group(
+    request: Request,
     response: Response,
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
     user_group: UserGroup = Body(None, description="A new UserGroup to be created."),
 ) -> None:
     """Creates a new instance of a UserGroup."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -122,11 +129,13 @@ async def create_user_group(
     summary="Delete a UserGroup",
 )
 async def delete_user_group(
+    request: Request,
     response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> None:
     """Deletes an existing UserGroup."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -153,11 +162,13 @@ async def delete_user_group(
     summary="Get a UserGroup",
 )
 async def get_user_group(
+    request: Request,
     response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> UserGroup:
     """Gets the details of a single instance of a UserGroup."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -202,10 +213,12 @@ async def get_user_groups(
     summary="Delete all versions of this package.",
 )
 async def package_by_name_delete(
+    request: Request,
     response: Response,
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -241,11 +254,13 @@ async def package_by_name_delete(
     tags=["default"],
 )
 async def package_by_name_get(
+    request: Request,
     response: Response,
     name: str = Path(None, description=""),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> List[PackageHistoryEntry]:
     """Return the history of this package (all versions)."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -283,10 +298,12 @@ async def package_by_name_get(
     status_code=201
 )
 async def package_create(
+    request: Request,
     response: Response,
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
     package: Package = Body(None, description=""),
 ) -> PackageMetadata:
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -322,10 +339,12 @@ async def package_create(
     summary="Delete this version of the package.",
 )
 async def package_delete(
+    request: Request,
     response: Response,
     id: str = Path(None, description="Package ID"),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -361,10 +380,12 @@ async def package_delete(
     tags=["default"],
 )
 async def package_rate(
+    request: Request,
     response: Response,
     id: str = Path(None, description=""),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> PackageRating:
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -399,11 +420,13 @@ async def package_rate(
     tags=["default"],
 )
 async def package_retrieve(
+    request: Request,
     response: Response,
     id: str = Path(None, description="ID of package to fetch"),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> Package:
     """Return this package."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -439,12 +462,14 @@ async def package_retrieve(
     summary="Update this version of the package.",
 )
 async def package_update(
+    request: Request,
     response: Response,
     id: str = Path(None, description=""),
     package: Package = Body(None, description=""),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> None:
     """The name, version, and ID must match.  The package contents (from PackageData) will replace the previous contents."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -523,9 +548,11 @@ async def packages_list(
     tags=["default"],
 )
 async def registry_reset(
+    request: Request,
     response: Response,
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
 ) -> None:
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -556,12 +583,14 @@ async def registry_reset(
     summary="Update a UserGroup",
 )
 async def update_user_group(
+    request: Request,
     response: Response,
     usergroupId: str = Path(None, description="A unique identifier for a &#x60;UserGroup&#x60;."),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
     user_group: UserGroup = Body(None, description="Updated UserGroup information."),
 ) -> None:
     """Updates an existing UserGroup."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
@@ -588,11 +617,13 @@ async def update_user_group(
     summary="Create a new user",
 )
 async def user_create(
+    request: Request,
     response: Response,
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
     user: User = Body(None, description="New user to register."),
 ) -> User:
     """Create a new registered user. Pass in User in body, and AuthorizationToken in header. AuthorizationToken must belong to user with \&quot;Admin\&quot; privileges."""
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
