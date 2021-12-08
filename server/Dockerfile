@@ -1,30 +1,6 @@
-FROM python:3.7 AS builder
+FROM python:3.9
 
-WORKDIR /usr/src/app
+ADD . /app
+WORKDIR /app
 
-RUN python3 -m venv /venv
-ENV PATH="/venv/bin:$PATH"
-
-RUN pip install --upgrade pip
-
-COPY . .
-RUN pip install --no-cache-dir .
-
-
-FROM python:3.7 AS test_runner
-WORKDIR /tmp
-COPY --from=builder /venv /venv
-COPY --from=builder /usr/src/app/tests tests
-ENV PATH=/venv/bin:$PATH
-
-# install test dependencies
-RUN pip install pytest
-
-# run tests
-RUN pytest tests
-
-
-FROM python:3.7 AS service
-WORKDIR /root/app/site-packages
-COPY --from=test_runner /venv /venv
-ENV PATH=/venv/bin:$PATH
+RUN ./run_server.sh gae_install_and_run

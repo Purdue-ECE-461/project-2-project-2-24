@@ -19,7 +19,7 @@ elif [ $1 == "install" ]; then
 elif [ $1 == "start" ]; then
     source venv/bin/activate
     export $(grep -v '^#' .env | xargs -d '\n')
-    python3 -m uvicorn openapi_server.main:app --host localhost --port 8080
+    python3 -m uvicorn openapi_server.main:app --host localhost --port $PORT
     deactivate
 elif [ $1 == "gae_install_and_run" ]; then
     python3 -m venv venv
