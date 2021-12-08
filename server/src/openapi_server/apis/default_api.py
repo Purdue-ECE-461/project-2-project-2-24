@@ -12,6 +12,7 @@ from fastapi import (  # noqa: F401
     Path,
     Query,
     Response,
+    Request,
     Security,
     status,
 )
@@ -28,12 +29,29 @@ from openapi_server.models.user import User
 from openapi_server.models.user_group import UserGroup
 from openapi_server.database.database import Database
 
+from logging.config import dictConfig
+import logging
+from openapi_server.models.log_conf import LogConfig
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("openapi_server")
 
 router = APIRouter()
 db = Database()
 
 
-def token_from_auth(auth):
+async def stringify_request(request):
+    output = ""
+    output += f"request header       : {dict(request.headers.items())}\n"
+    output += f"request query params : {dict(request.query_params.items())}\n"
+    try:
+        output += f"request json         : {await request.json()}\n"
+    except Exception as err:
+        # could not parse json
+        output += f"request body         : {await request.body()}\n"
+    return output
+
+
+async def token_from_auth(auth):
     return auth.split()[-1]
 
 
@@ -462,13 +480,15 @@ async def package_update(
     summary="Get packages",
 )
 async def packages_list(
+    request: Request,
     response: Response,
     package_query: List[PackageQuery] = Body(None, description=""),
     x_authorization: str = Header(None, description="", convert_underscores=False),
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
-    print(locals())
+    logger.info(locals())
+    logger.info(stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
