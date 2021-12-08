@@ -2,7 +2,7 @@ runtime: python39
 
 instance_class: F2
 
-entrypoint: python3 -m openapi_server
+entrypoint: server/run_server.sh gae_install_and_run
 
 includes:
   - env_variables.yaml
