@@ -2,7 +2,7 @@ runtime: python39
 
 instance_class: F2
 
-entrypoint: server/run_server.sh gae_install_and_run
+entrypoint: ./run_server.sh gae_install_and_run
 
 includes:
   - env_variables.yaml
