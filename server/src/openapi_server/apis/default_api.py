@@ -51,7 +51,7 @@ async def stringify_request(request):
     return output
 
 
-async def token_from_auth(auth):
+def token_from_auth(auth):
     return auth.split()[-1]
 
 
@@ -483,12 +483,12 @@ async def packages_list(
     request: Request,
     response: Response,
     package_query: List[PackageQuery] = Body(None, description=""),
-    x_authorization: str = Header(None, description="", convert_underscores=False),
+    x_authorization: str = Header(None, description=""),
     offset: str = Query(None, description="Provide this for pagination. If not provided, returns the first page of results."),
 ) -> List[PackageMetadata]:
     """Get any packages fitting the query."""
     logger.info(locals())
-    logger.info(stringify_request(request))
+    logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
     # First check if token is expired
     expired = db.check_token_expiration(token)
