@@ -1,5 +1,5 @@
 runtime: custom
 env: flex
-entrypoint: ./run_server.sh start
+entrypoint: ./run_server.sh gae_start
 includes:
   - env_variables.yaml
