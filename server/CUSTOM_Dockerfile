@@ -1,0 +1,21 @@
+FROM gcr.io/google-appengine/python
+
+# Create a python3 virtualenv for dependencies
+RUN virtualenv /venv -p python3.7
+
+# Same as source /venv/bin/activate
+ENV VIRTUAL_ENV /venv
+ENV PATH /venv/bin:$PATH
+
+# Install dependencies
+ADD requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r /app/requirements.txt
+
+ADD . /app
+
+# Install openapi_server
+RUN pip install /app/.
+
+# Run the server
+CMD python -m uvicorn openapi_server.main:app --port 8080

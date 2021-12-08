@@ -1,5 +1,5 @@
-runtime: custom
-env: flex
-entrypoint: ./run_server.sh gae_start
+runtime: python38
+
+entrypoint: python3 -m uvicorn openapi_server.main:app --port $PORT
 includes:
   - env_variables.yaml
