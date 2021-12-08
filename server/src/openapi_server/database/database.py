@@ -7,6 +7,7 @@ import tempfile
 import zipfile
 from re import L
 from google.cloud import bigquery
+from google.cloud.exceptions import Conflict
 from google.api_core.exceptions import BadRequest
 from openapi_server.models.extra_models import TokenModel  # noqa: F401
 from openapi_server.models.authentication_request import AuthenticationRequest
@@ -740,7 +741,10 @@ class Database:
                         description=column["description"]
                     ))
                 table = bigquery.Table(f"{os.environ['GOOGLE_CLOUD_PROJECT']}.{self.dataset.dataset_id}.{schema_filename.split('.')[-2]}", schema=schema)
-                self.client.create_table(table, exists_ok=True)
+                try:
+                    self.client.create_table(table)
+                except Conflict:
+                    print("Table '" + schema_filename.split('.')[-2] + "' already exists!")
 
     def initialize(self):
         # First ensure tables are properly set up
