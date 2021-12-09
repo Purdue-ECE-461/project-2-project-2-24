@@ -58,22 +58,31 @@ jobs:
           python-version: "3.9"
       - name: Install dependencies
         run: |
+          cd server
           python -m pip install --upgrade pip
-          pip install -r ./server/requirements.txt
-          pip install ./server
+          pip install -r requirements.txt
+          cd ..
       - name: Test Server
         run: |
           export GOOGLE_CLOUD_PROJECT=${{secrets.GOOGLE_PROJECT_ID}}
           export BIGQUERY_DATASET=module_registry
-          printf '%s\n' '${{secrets.GOOGLE_APP_ENGINE_KEY}}' > google_creds.json
+          printf '%s\n' '${{secrets.GOOGLE_APP_ENGINE_KEY}}' > server/google_creds.json
           export GOOGLE_APPLICATION_CREDENTIALS=google_creds.json
-          pytest server
+          export GITHUB_TOKEN=${{secrets.TOKEN}}
+          cd server
+          pytest tests/test_database.py
+          pytest tests/test_default_api.py
+          cd ..
       - name: Test Scorer
         run: |
-          pytest scorer
+          cd server/src/openapi_server/scorer
+          pytest .
+          cd .. && cd .. && cd .. && cd ..
       - name: Test Frontend
         run: |
-          pytest frontend
+          cd frontend
+          pytest .
+          cd ..
 
   deployment:
     name: Deployment
@@ -92,5 +101,5 @@ jobs:
           project_id: ${{secrets.GOOGLE_PROJECT_ID}}
           version: dev
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
-          flags: --no-cache
+          flags: --no-cache --no-promote
           deliverables: server/app.yaml

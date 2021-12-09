@@ -41,4 +41,5 @@ testresources
 beautifulsoup4
 gitpython
 pygithub
+pytest-html
 .

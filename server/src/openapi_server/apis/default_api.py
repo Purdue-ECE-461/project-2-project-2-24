@@ -114,6 +114,8 @@ async def create_auth_token(
     new_token = db.create_new_token(authentication_request)
     if isinstance(new_token, Error):
         response.status_code = new_token.code
+    elif isinstance(new_token, str):
+        new_token = "bearer " + new_token
     logger.info(new_token)
     return new_token
 
@@ -795,14 +797,26 @@ async def user_create(
         response.status_code = expired.code
         logger.warning(expired)
         return expired
-    # TODO: DO STUFF HERE
+    requesting_user = db.get_user_from_token(token)
+    if isinstance(requesting_user, Error):
+        response.status_code = requesting_user.code
+        logger.warning(requesting_user)
+        return requesting_user
+    if not requesting_user.user_group.create_user:
+        err = Error(code=401, message="Not authorized to create a new user!")
+        response.status_code = err.code
+        logger.warning(err)
+        return err
+    new_user = db.create_new_user(user=requesting_user, new_user=user)
+    if isinstance(new_user, Error):
+        response.status_code = new_user.code
+        logger.warning(new_user)
+        return new_user
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
-    err = Error(code="501", message="Not implemented!")
-    response.status_code = err.code
-    logger.warning(err)
-    return err
+    logger.info(new_user)
+    return new_user
