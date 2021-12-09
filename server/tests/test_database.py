@@ -32,10 +32,10 @@ def test_get_user_group_id():
     print("TODO")
 
 
-def test_create_new_user(default_user, new_user, new_user_password, admin_user_group_name):
+def test_create_new_user(default_user, new_user):
     print("\nTESTING: Create new user")
     print()
-    results = db.create_new_user(default_user, new_user, new_user_password, admin_user_group_name)
+    results = db.create_new_user(default_user, new_user)
     print("Created new user:", results)
     assert not isinstance(results, Error)
 
@@ -72,10 +72,10 @@ def test_ingest_package(default_user, package_to_ingest):
     assert isinstance(metadata, PackageMetadata)
     
 
-def test_download_package(default_user, package_id):
+def test_download_package(package_id):
     print("\nTESTING: Download package")
     print()
-    package = db.download_package(user=default_user, package_id=package_id)
+    package = db.download_package(package_id=package_id)
     print("Downloaded Package:", package)
     assert isinstance(package, Package)
 

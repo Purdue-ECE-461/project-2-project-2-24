@@ -22,7 +22,7 @@ def test_registry_reset(client: TestClient):
     """
 
     headers = {
-        "x_authorization": "default_token",
+        "x-authorization": "default_token",
     }
     response = client.request(
         "DELETE",
@@ -86,7 +86,7 @@ def test_create_auth_token(client: TestClient):
 #     }
 #
 #     headers = {
-#         "x_authorization": 'default_token',
+#         "x-authorization": 'default_token',
 #     }
 #     response = client.request(
 #         "POST",
@@ -106,7 +106,7 @@ def test_delete_user_group(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "DELETE",
@@ -125,7 +125,7 @@ def test_get_user_group(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "GET",
@@ -162,7 +162,7 @@ def test_package_by_name_delete(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "DELETE",
@@ -181,7 +181,7 @@ def test_package_by_name_get(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "GET",
@@ -202,7 +202,7 @@ def test_package_create(client: TestClient):
                "data": {"content": "Content", "js_program": "JSProgram"}}
 
     headers = {
-        "x_authorization": "default_token",
+        "x-authorization": "default_token",
     }
     response = client.request(
         "POST",
@@ -222,7 +222,7 @@ def test_package_delete(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "DELETE",
@@ -241,7 +241,7 @@ def test_package_rate(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "GET",
@@ -260,7 +260,7 @@ def test_package_retrieve(client: TestClient):
     """
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "GET",
@@ -281,7 +281,7 @@ def test_package_update(client: TestClient):
                "data": {"content": "Content", "js_program": "JSProgram", "url": "URL"}}
 
     headers = {
-        "x_authorization": "default_token",
+        "x-authorization": "default_token",
     }
     response = client.request(
         "PUT",
@@ -303,7 +303,7 @@ def test_packages_list(client: TestClient):
         {"version": "Exact (1.2.3)\nBounded range (1.2.3-2.1.0)\nCarat (^1.2.3)\nTilde (~1.2.0)", "name": "Name"}]
     params = [("offset", '0')]
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "POST",
@@ -325,7 +325,7 @@ def test_update_user_group(client: TestClient):
     user_group = {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}
 
     headers = {
-        "x_authorization": 'default_token',
+        "x-authorization": 'default_token',
     }
     response = client.request(
         "PUT",
@@ -347,7 +347,7 @@ def test_user_create(client: TestClient):
             "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
 
     headers = {
-        "x_authorization": "default_token",
+        "x-authorization": "default_token",
     }
     response = client.request(
         "POST",

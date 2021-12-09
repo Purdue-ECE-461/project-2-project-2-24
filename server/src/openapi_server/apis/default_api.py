@@ -56,7 +56,7 @@ def token_from_auth(auth):
     try:
         token = auth.split()[-1]
     except:
-        token = "unknown_token"
+        token = Error(code=400, message="Missing x-authorization header data!")
     return token
 
 
@@ -101,6 +101,9 @@ async def create_user_group(
     logger.info("CREATE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -148,6 +151,9 @@ async def delete_user_group(
     logger.info("DELETE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -185,6 +191,9 @@ async def get_user_group(
     logger.info("GET_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -241,6 +250,9 @@ async def package_by_name_delete(
     logger.info("PACKAGE_BY_NAME_DELETE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -289,6 +301,9 @@ async def package_by_name_get(
     logger.info("PACKAGE_BY_NAME_GET REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -338,6 +353,9 @@ async def package_create(
     logger.info("PACKAGE_CREATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -385,6 +403,9 @@ async def package_delete(
     logger.info("PACKAGE_DELETE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -432,6 +453,9 @@ async def package_rate(
     logger.info("PACKAGE_RATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -479,6 +503,9 @@ async def package_retrieve(
     logger.info("PACKAGE_RETRIEVE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -528,6 +555,9 @@ async def package_update(
     logger.info("PACKAGE_UPDATE REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -577,6 +607,9 @@ async def packages_list(
     logger.info("PACKAGES_LIST REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -623,6 +656,9 @@ async def registry_reset(
     logger.info("REGISTRY_RESET REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -666,6 +702,9 @@ async def update_user_group(
     logger.info("UPDATE_USER_GROUP REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
@@ -703,6 +742,9 @@ async def user_create(
     logger.info("CREATE_USER REQUEST:\n")
     logger.info(await stringify_request(request))
     token = token_from_auth(x_authorization)
+    if isinstance(token, Error):
+        response.status_code = token.code
+        return token
     # First check if token is expired
     expired = db.check_token_expiration(token)
     if isinstance(expired, Error):
