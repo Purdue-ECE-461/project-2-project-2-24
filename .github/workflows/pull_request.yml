@@ -67,6 +67,7 @@ jobs:
           export BIGQUERY_DATASET=module_registry
           printf '%s\n' '${{secrets.GOOGLE_APP_ENGINE_KEY}}' > google_creds.json
           export GOOGLE_APPLICATION_CREDENTIALS=google_creds.json
+          export GITHUB_TOKEN=${{secrets.TOKEN}}
           pytest server
       - name: Test Scorer
         run: |
@@ -92,5 +93,5 @@ jobs:
           project_id: ${{secrets.GOOGLE_PROJECT_ID}}
           version: dev
           credentials: ${{secrets.GOOGLE_APP_ENGINE_KEY}}
-          flags: --no-cache
+          flags: --no-cache --no-promote
           deliverables: server/app.yaml
