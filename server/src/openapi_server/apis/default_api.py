@@ -114,8 +114,9 @@ async def create_auth_token(
     new_token = db.create_new_token(authentication_request)
     if isinstance(new_token, Error):
         response.status_code = new_token.code
-    elif isinstance(new_token, str):
-        new_token = "bearer " + new_token
+        logger.warning(new_token)
+        return new_token
+    new_token = "bearer " + str(new_token)
     logger.info(new_token)
     return new_token
 
