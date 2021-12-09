@@ -32,7 +32,7 @@ class Github_Handler:
 
     # returns paginated list
     def get_issues(self, repo_obj):
-        issues = repo_obj.get_issues()
+        issues = repo_obj.get_issues(state="closed")
         return issues
 
 

@@ -99,104 +99,66 @@ def test_create_auth_token(client: TestClient):
 #     assert response.status_code == 200
 
 
-def test_delete_user_group(client: TestClient):
-    """Test case for delete_user_group
-
-    Delete a UserGroup
-    """
-
-    headers = {
-        "x-authorization": 'default_token',
-    }
-    response = client.request(
-        "DELETE",
-        "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
-
-
-def test_get_user_group(client: TestClient):
-    """Test case for get_user_group
-
-    Get a UserGroup
-    """
-
-    headers = {
-        "x-authorization": 'default_token',
-    }
-    response = client.request(
-        "GET",
-        "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+# def test_delete_user_group(client: TestClient):
+#     """Test case for delete_user_group
+#
+#     Delete a UserGroup
+#     """
+#
+#     headers = {
+#         "x-authorization": 'default_token',
+#     }
+#     response = client.request(
+#         "DELETE",
+#         "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
+#         headers=headers,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200
 
 
-def test_get_user_groups(client: TestClient):
-    """Test case for get_user_groups
-
-    List All UserGroups
-    """
-
-    headers = {
-    }
-    response = client.request(
-        "GET",
-        "/usergroups",
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
-
-
-def test_package_by_name_delete(client: TestClient):
-    """Test case for package_by_name_delete
-
-    Delete all versions of this package.
-    """
-
-    headers = {
-        "x-authorization": 'default_token',
-    }
-    response = client.request(
-        "DELETE",
-        "/package/byName/{name}".format(name='name_example'),
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+# def test_get_user_group(client: TestClient):
+#     """Test case for get_user_group
+#
+#     Get a UserGroup
+#     """
+#
+#     headers = {
+#         "x-authorization": 'default_token',
+#     }
+#     response = client.request(
+#         "GET",
+#         "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
+#         headers=headers,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200
 
 
-def test_package_by_name_get(client: TestClient):
-    """Test case for package_by_name_get
+# def test_get_user_groups(client: TestClient):
+#     """Test case for get_user_groups
+#
+#     List All UserGroups
+#     """
+#
+#     headers = {
+#     }
+#     response = client.request(
+#         "GET",
+#         "/usergroups",
+#         headers=headers,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200
 
-    
-    """
 
-    headers = {
-        "x-authorization": 'default_token',
-    }
-    response = client.request(
-        "GET",
-        "/package/byName/{name}".format(name='name_example'),
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
-
-
-def test_package_create(client: TestClient):
+def test_package_upload(client: TestClient):
     """Test case for package_create
 
-    
+
     """
     package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "ID", "name": "Name"},
                "data": {"content": "Content", "js_program": "JSProgram"}}
@@ -215,18 +177,40 @@ def test_package_create(client: TestClient):
     assert response.status_code == 201
 
 
-def test_package_delete(client: TestClient):
-    """Test case for package_delete
+def test_package_ingest(client: TestClient):
+    """Test case for package_create
 
-    Delete this version of the package.
+
+    """
+    package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "debug", "name": "Debug"},
+               "data": {"url": "https://github.com/debug-js/debug", "js_program": "JSProgram"}}
+
+    headers = {
+        "x-authorization": "default_token",
+    }
+    response = client.request(
+        "POST",
+        "/package",
+        headers=headers,
+        json=package,
+    )
+
+    # uncomment below to assert the status code of the HTTP response
+    assert response.status_code == 201
+
+
+def test_package_by_name_get(client: TestClient):
+    """Test case for package_by_name_get
+
+
     """
 
     headers = {
         "x-authorization": 'default_token',
     }
     response = client.request(
-        "DELETE",
-        "/package/{id}".format(id='id_example'),
+        "GET",
+        "/package/byName/{name}".format(name='Name'),
         headers=headers,
     )
 
@@ -245,7 +229,7 @@ def test_package_rate(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/package/{id}/rate".format(id='id_example'),
+        "/package/{id}/rate".format(id='debug'),
         headers=headers,
     )
 
@@ -278,7 +262,7 @@ def test_package_update(client: TestClient):
     Update this version of the package.
     """
     package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "ID", "name": "Name"},
-               "data": {"content": "Content", "js_program": "JSProgram", "url": "URL"}}
+               "data": {"content": "Content", "js_program": "JSProgram"}}
 
     headers = {
         "x-authorization": "default_token",
@@ -317,44 +301,82 @@ def test_packages_list(client: TestClient):
     assert response.status_code == 200
 
 
-def test_update_user_group(client: TestClient):
-    """Test case for update_user_group
+def test_package_by_name_delete(client: TestClient):
+    """Test case for package_by_name_delete
 
-    Update a UserGroup
+    Delete all versions of this package.
     """
-    user_group = {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}
 
     headers = {
         "x-authorization": 'default_token',
     }
     response = client.request(
-        "PUT",
-        "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
+        "DELETE",
+        "/package/byName/{name}".format(name='Name'),
         headers=headers,
-        json=user_group,
     )
 
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
 
 
-def test_user_create(client: TestClient):
-    """Test case for user_create
+def test_package_delete(client: TestClient):
+    """Test case for package_delete
 
-    Create a new user
+    Delete this version of the package.
     """
-    user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
-            "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
 
     headers = {
-        "x-authorization": "default_token",
+        "x-authorization": 'default_token',
     }
     response = client.request(
-        "POST",
-        "/user",
+        "DELETE",
+        "/package/{id}".format(id='debug'),
         headers=headers,
-        json=user,
     )
 
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
+
+
+# def test_update_user_group(client: TestClient):
+#     """Test case for update_user_group
+#
+#     Update a UserGroup
+#     """
+#     user_group = {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}
+#
+#     headers = {
+#         "x-authorization": 'default_token',
+#     }
+#     response = client.request(
+#         "PUT",
+#         "/usergroups/{usergroupId}".format(usergroupId='usergroup_id_example'),
+#         headers=headers,
+#         json=user_group,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200
+
+
+# def test_user_create(client: TestClient):
+#     """Test case for user_create
+#
+#     Create a new user
+#     """
+#     user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
+#             "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
+#
+#     headers = {
+#         "x-authorization": "default_token",
+#     }
+#     response = client.request(
+#         "POST",
+#         "/user",
+#         headers=headers,
+#         json=user,
+#     )
+#
+#     # uncomment below to assert the status code of the HTTP response
+#     assert response.status_code == 200

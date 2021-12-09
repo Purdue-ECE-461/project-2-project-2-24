@@ -60,6 +60,41 @@ def token_from_auth(auth):
     return token
 
 
+def prettify_metadata(metadata):
+    return {
+        "Name": metadata.name,
+        "Version": metadata.version,
+        "ID": metadata.id,
+        "Sensitive": metadata.sensitive,
+        "Secret": metadata.secret
+    }
+
+
+def prettify_data(data):
+    return {
+        "Content": data.content,
+        "URL": data.url,
+        "JSProgram": data.js_program
+    }
+
+
+def prettify_rating(rating):
+    return {
+        "RampUp": rating.ramp_up,
+        "Correctness": rating.correctness,
+        "BusFactor": rating.bus_factor,
+        "ResponsiveMaintainer": rating.responsive_maintainer,
+        "LicenseScore": rating.license_score,
+        "GoodPinnningPractice": rating.good_pinning_practice
+    }
+
+
+def prettify_package(package):
+    package.metadata = prettify_metadata(package.metadata)
+    package.data = prettify_data(package.data)
+    return package
+
+
 @router.put(
     "/authenticate",
     responses={
@@ -320,17 +355,20 @@ async def package_by_name_get(
         response.status_code = err.code
         logger.warning(err)
         return err
-    package = db.get_package_by_name(name)
-    if isinstance(package, Error):
-        response.status_code = package.code
+    packages = db.get_package_by_name(name)
+    if isinstance(packages, Error):
+        response.status_code = packages.code
     # Now decrement remaining token uses
     decrement = db.decrement_token_interactions(token)
     if isinstance(decrement, Error):
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
-    logger.info(package)
-    return package
+    for i in range(len(packages)):
+        if isinstance(packages[i], Package):
+            packages[i] = prettify_package(packages[i])
+    logger.info(packages)
+    return packages
 
 
 @router.post(
@@ -381,6 +419,8 @@ async def package_create(
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
+    if isinstance(metadata, PackageMetadata):
+        metadata = prettify_metadata(metadata)
     logger.info(metadata)
     return metadata
 
@@ -481,6 +521,8 @@ async def package_rate(
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
+    if isinstance(rating, PackageRating):
+        rating = prettify_rating(rating)
     logger.info(rating)
     return rating
 
@@ -531,6 +573,8 @@ async def package_retrieve(
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
+    if isinstance(package, Package):
+        package = prettify_package(package)
     logger.info(package)
     return package
   
