@@ -366,7 +366,7 @@ def test_user_create(client: TestClient):
     Create a new user
     """
     user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
-            "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
+            "user_group": {"id": 1, "name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
 
     headers = {
         "x-authorization": "default_token",

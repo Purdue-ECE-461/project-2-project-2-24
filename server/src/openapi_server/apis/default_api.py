@@ -818,6 +818,5 @@ async def user_create(
         response.status_code = decrement.code
         logger.warning(decrement)
         return decrement
-    response.status_code = 201
     logger.info(new_user)
     return new_user
