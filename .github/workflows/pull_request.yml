@@ -58,9 +58,10 @@ jobs:
           python-version: "3.9"
       - name: Install dependencies
         run: |
+          cd server
           python -m pip install --upgrade pip
-          pip install -r ./server/requirements.txt
-          pip install ./server
+          pip install -r requirements.txt
+          cd ..
       - name: Test Server
         run: |
           export GOOGLE_CLOUD_PROJECT=${{secrets.GOOGLE_PROJECT_ID}}
