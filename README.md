@@ -15,13 +15,13 @@ Packages can be uploaded via base64 encoded string of the .zip contents, or inge
 
 Change directory to the "server" directory. 
 
-1. "./run_server.sh install" will install all required packages in a virtual environment. You will see a .venv folder appear in the server directory after running this program. To activate this virtual environment, use the command: "source venv/bin/activate".
+1. "./run_server.sh install" will install all required packages in a virtual environment. You will see a venv folder appear in the server directory after running this program. To activate this virtual environment, use the command: "source venv/bin/activate".
 2. "./run_server.sh start" will start the server and the local host url will be provided in the terminal which you can then paste into a broweser to view. The url will be: http://localhost:8080. You can use: http://localhost:8080/docs to test out the api functionality.
 3. "./run_server.sh test" will run all the testcases for the program and output results in "test_output.txt."
 4. "./run_server.sh clean" will remove the virtual environment
 5. "./run_server.sh -help" will also provide information on how to run the server. 
 
-You will also need to set up a .env file in the server directory for the program to run properly. GOOGLE_CLOUD_PROJECT, BIGQUERY_DATASET & GOOGLE_APPLICATION_CREDENTIALS are the three different environment variables currently in use.
+You will also need to set up a .env file in the server directory for the program to run properly. GOOGLE_CLOUD_PROJECT, BIGQUERY_DATASET GOOGLE_APPLICATION_CREDENTIALS, and GITHUB_TOKEN are the four different environment variables currently in use.
 
 
 
