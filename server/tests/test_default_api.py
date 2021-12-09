@@ -360,23 +360,23 @@ def test_package_delete(client: TestClient):
 #     assert response.status_code == 200
 
 
-# def test_user_create(client: TestClient):
-#     """Test case for user_create
-#
-#     Create a new user
-#     """
-#     user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
-#             "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
-#
-#     headers = {
-#         "x-authorization": "default_token",
-#     }
-#     response = client.request(
-#         "POST",
-#         "/user",
-#         headers=headers,
-#         json=user,
-#     )
-#
-#     # uncomment below to assert the status code of the HTTP response
-#     assert response.status_code == 200
+def test_user_create(client: TestClient):
+    """Test case for user_create
+
+    Create a new user
+    """
+    user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
+            "user_group": {"name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
+
+    headers = {
+        "x-authorization": "default_token",
+    }
+    response = client.request(
+        "POST",
+        "/user",
+        headers=headers,
+        json=user,
+    )
+
+    # uncomment below to assert the status code of the HTTP response
+    assert response.status_code == 200
