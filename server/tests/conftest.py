@@ -133,6 +133,21 @@ def package_id(package) -> str:
 
 
 @pytest.fixture
+def package_name(package) -> str:
+    return package.metadata.name
+
+
+@pytest.fixture
+def package_ingest_id(package_to_ingest) -> str:
+    return package_to_ingest.metadata.id
+
+
+@pytest.fixture
+def package_ingest_name(package_to_ingest) -> str:
+    return package_to_ingest.metadata.name
+
+
+@pytest.fixture
 def admin_user_group_name(admin_user_group) -> str:
     return admin_user_group.name
 

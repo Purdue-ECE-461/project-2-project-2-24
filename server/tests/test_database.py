@@ -35,7 +35,7 @@ def test_get_user_group_id():
 def test_create_new_user(default_user, new_user):
     print("\nTESTING: Create new user")
     print()
-    results = db.create_new_user(default_user, new_user)
+    results = db.create_new_user(user=default_user, new_user=new_user)
     print("Created new user:", results)
     assert not isinstance(results, Error)
 
@@ -43,7 +43,7 @@ def test_create_new_user(default_user, new_user):
 def test_create_new_token(default_auth_request):
     print("\nTESTING: Create new token")
     print()
-    created_token = db.create_new_token(default_auth_request)
+    created_token = db.create_new_token(auth_request=default_auth_request)
     print("New token:", created_token)
     assert isinstance(created_token, str)
 
@@ -51,7 +51,7 @@ def test_create_new_token(default_auth_request):
 def test_get_user_id_from_token(default_token):
     print("\nTESTING: Get user ID from token")
     print()
-    user_id = db.get_user_id_from_token(default_token)
+    user_id = db.get_user_id_from_token(token=default_token)
     print("User ID:", user_id)
     assert isinstance(user_id, int)
 
@@ -80,6 +80,14 @@ def test_download_package(package_id):
     assert isinstance(package, Package)
 
 
+def test_download_package_by_name(package_name):
+    print("\nTESTING: Download package")
+    print()
+    packages = db.get_package_by_name(package_name=package_name)
+    print("Downloaded Package Versions:", packages)
+    assert not isinstance(packages, Error)
+
+
 def test_update_package(default_user, package_id, package):
     print("\nTESTING: Update package")
     print()
@@ -99,7 +107,7 @@ def test_rate_package(package_id):
 def test_upload_js_program(package_id, js_program):
     print("\nTESTING: Upload js program")
     print()
-    js_program_id = db.upload_js_program(package_id, js_program)
+    js_program_id = db.upload_js_program(package_id=package_id, js_program=js_program)
     print("JS program id:", js_program_id)
     assert isinstance(js_program_id, int)
 
@@ -107,7 +115,7 @@ def test_upload_js_program(package_id, js_program):
 def test_gen_new_integer_id(int_id_table):
     print("\nTESTING: Generate new integer ID")
     print()
-    new_id = db.gen_new_integer_id(int_id_table)
+    new_id = db.gen_new_integer_id(table=int_id_table)
     print("New id:", new_id)
     assert isinstance(new_id, int)
 
@@ -115,7 +123,7 @@ def test_gen_new_integer_id(int_id_table):
 def test_get_user_id(default_username):
     print("\nTESTING: Get user ID")
     print()
-    user_id = db.get_user_id(default_username)
+    user_id = db.get_user_id(name=default_username)
     print("User id:", user_id)
     assert isinstance(user_id, int)
 
@@ -123,7 +131,7 @@ def test_get_user_id(default_username):
 def test_package_id_exists(package_id):
     print("\nTESTING: Package ID exists")
     print()
-    package_id_exists = db.package_id_exists(package_id)
+    package_id_exists = db.package_id_exists(package_id=package_id)
     print("Package ID exists:", package_id_exists)
     assert isinstance(package_id_exists, bool)
 
@@ -131,15 +139,31 @@ def test_package_id_exists(package_id):
 def test_package_exists(package):
     print("\nTESTING: Package exists")
     print()
-    package_exists = db.package_exists(package.metadata.name, package.metadata.version)
+    package_exists = db.package_exists(name=package.metadata.name, version=package.metadata.version)
     print("Package exists:", package_exists)
     assert isinstance(package_exists, bool)
+
+
+def test_delete_package(package_id):
+    print("\nTESTING: Delete package")
+    print()
+    result = db.delete_package(package_id=package_id)
+    print("Delete package:", result)
+    assert not isinstance(result, Error)
+
+
+def test_delete_package_by_name(package_ingest_name):
+    print("\nTESTING: Delete package")
+    print()
+    result = db.delete_package_by_name(name=package_ingest_name)
+    print("Delete package:", result)
+    assert not isinstance(result, Error)
 
 
 def test_execute_valid_query(valid_query):
     print("\nTESTING: Execute valid query")
     print()
-    results = db.execute_query(valid_query)
+    results = db.execute_query(query=valid_query)
     print("Execute valid query:", results)
     assert not isinstance(results, Error)
 
@@ -147,6 +171,6 @@ def test_execute_valid_query(valid_query):
 def test_execute_invalid_query(invalid_query):
     print("\nTESTING: Execute invalid query")
     print()
-    results = db.execute_query(invalid_query)
+    results = db.execute_query(query=invalid_query)
     print("Execute invalid query:", results)
     assert isinstance(results, Error)
