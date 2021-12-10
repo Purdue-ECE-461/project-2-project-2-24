@@ -7,6 +7,7 @@ import re  # noqa: F401
 from typing import Any, Dict, List, Optional  # noqa: F401
 
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
+from pydantic.fields import Field
 
 
 class UserGroup(BaseModel):
@@ -24,11 +25,11 @@ class UserGroup(BaseModel):
         id: The id of this UserGroup [Optional].
     """
 
-    name: str
-    upload: bool
-    search: bool
-    download: bool
-    create_user: bool
-    id: Optional[int] = None
+    name: str = Field(..., alias='Name')
+    upload: bool = Field(..., alias='Upload')
+    search: bool = Field(..., alias='Search')
+    download: bool = Field(..., alias='Download')
+    create_user: bool = Field(..., alias='CreateUser')
+    id: Optional[int] = Field(None, alias='ID')
 
 UserGroup.update_forward_refs()

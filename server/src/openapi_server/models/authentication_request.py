@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional  # noqa: F401
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
 from openapi_server.models.user import User
 from openapi_server.models.user_authentication_info import UserAuthenticationInfo
+from pydantic.fields import Field
 
 
 class AuthenticationRequest(BaseModel):
@@ -22,7 +23,7 @@ class AuthenticationRequest(BaseModel):
         secret: The secret of this AuthenticationRequest.
     """
 
-    user: User
-    secret: UserAuthenticationInfo
+    user: User = Field(..., alias='User')
+    secret: UserAuthenticationInfo = Field(..., alias='Secret')
 
 AuthenticationRequest.update_forward_refs()

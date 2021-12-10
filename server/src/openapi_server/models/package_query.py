@@ -7,6 +7,7 @@ import re  # noqa: F401
 from typing import Any, Dict, List, Optional  # noqa: F401
 
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
+from pydantic.fields import Field
 
 
 class PackageQuery(BaseModel):
@@ -20,7 +21,7 @@ class PackageQuery(BaseModel):
         name: The name of this PackageQuery.
     """
 
-    version: Optional[str] = None
-    name: str
+    version: Optional[str] = Field(None, alias='Version')
+    name: str = Field(..., alias='Name')
 
 PackageQuery.update_forward_refs()

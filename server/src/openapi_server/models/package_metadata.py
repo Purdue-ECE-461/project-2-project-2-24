@@ -7,6 +7,7 @@ import re  # noqa: F401
 from typing import Any, Dict, List, Optional  # noqa: F401
 
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
+from pydantic.fields import Field
 
 
 class PackageMetadata(BaseModel):
@@ -23,10 +24,10 @@ class PackageMetadata(BaseModel):
         secret: The secret of this PackageMetadata [Optional].
     """
 
-    name: str
-    version: str
-    id: str
-    sensitive: Optional[bool] = None
-    secret: Optional[bool] = None
+    name: str = Field(..., alias='Name')
+    version: str = Field(..., alias='Version')
+    id: str = Field(..., alias='ID')
+    sensitive: Optional[bool] = Field(None, alias='Sensitive')
+    secret: Optional[bool] = Field(None, alias='Secret')
 
 PackageMetadata.update_forward_refs()

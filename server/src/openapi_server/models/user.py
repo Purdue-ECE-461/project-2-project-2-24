@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional  # noqa: F401
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
 from openapi_server.models.user_authentication_info import UserAuthenticationInfo
 from openapi_server.models.user_group import UserGroup
+from pydantic.fields import Field
 
 
 class User(BaseModel):
@@ -26,7 +27,7 @@ class User(BaseModel):
     """
 
     name: str
-    is_admin: bool
+    is_admin: bool = Field(..., alias='isAdmin')
     user_authentication_info: Optional[UserAuthenticationInfo] = None
     user_group: Optional[UserGroup] = None
     id: Optional[int] = None

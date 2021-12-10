@@ -7,6 +7,7 @@ import re  # noqa: F401
 from typing import Any, Dict, List, Optional  # noqa: F401
 
 from pydantic import AnyUrl, BaseModel, EmailStr, validator  # noqa: F401
+from pydantic.fields import Field
 
 
 class PackageData(BaseModel):
@@ -21,8 +22,8 @@ class PackageData(BaseModel):
         js_program: The js_program of this PackageData [Optional].
     """
 
-    content: Optional[str] = None
-    url: Optional[str] = None
-    js_program: Optional[str] = None
+    content: Optional[str] = Field(None, alias='Content')
+    url: Optional[str] = Field(None, alias='URL')
+    js_program: Optional[str] = Field(None, alias='JSProgram')
 
 PackageData.update_forward_refs()
