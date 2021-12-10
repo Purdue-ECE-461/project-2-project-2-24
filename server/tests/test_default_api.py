@@ -40,12 +40,12 @@ def test_create_auth_token(client: TestClient):
     
     """
     authentication_request = {
-        "secret": {
+        "Secret": {
             "password": "correcthorsebatterystaple123(!__+@**(A"
         },
-        "user": {
+        "User": {
             "name": "ece461defaultadminuser",
-            "is_admin": 1,
+            "isAdmin": 1,
             "id": 1,
             "user_authentication_info": {
                 "password": "correcthorsebatterystaple123(!__+@**(A"
@@ -72,31 +72,31 @@ def test_create_auth_token(client: TestClient):
     assert response.status_code == 200
 
 
-# def test_create_user_group(client: TestClient):
-#     """Test case for create_user_group
-#
-#     Create a UserGroup
-#     """
-#     user_group = {
-#         "name": "Admins",
-#         "upload": 1,
-#         "search": 1,
-#         "download": 1,
-#         "create_user": 1
-#     }
-#
-#     headers = {
-#         "x-authorization": 'default_token',
-#     }
-#     response = client.request(
-#         "POST",
-#         "/usergroups",
-#         headers=headers,
-#         json=user_group,
-#     )
-#
-#     # uncomment below to assert the status code of the HTTP response
-#     assert response.status_code == 200
+def test_create_user_group(client: TestClient):
+    """Test case for create_user_group
+
+    Create a UserGroup
+    """
+    user_group = {
+        "name": "Admins",
+        "upload": 1,
+        "search": 1,
+        "download": 1,
+        "create_user": 1
+    }
+
+    headers = {
+        "x-authorization": 'default_token',
+    }
+    response = client.request(
+        "POST",
+        "/usergroups",
+        headers=headers,
+        json=user_group,
+    )
+
+    # uncomment below to assert the status code of the HTTP response
+    assert response.status_code == 200
 
 
 # def test_delete_user_group(client: TestClient):
@@ -160,8 +160,8 @@ def test_package_upload(client: TestClient):
 
 
     """
-    package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "ID", "name": "Name"},
-               "data": {"content": "Content", "js_program": "JSProgram"}}
+    package = {"metadata": {"secret": 1, "Version": "1.2.3", "sensitive": 1, "ID": "ID", "Name": "Name"},
+               "data": {"Content": "Content", "JSProgram": "JSProgram"}}
 
     headers = {
         "x-authorization": "default_token",
@@ -182,8 +182,8 @@ def test_package_ingest(client: TestClient):
 
 
     """
-    package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "debug", "name": "Debug"},
-               "data": {"url": "https://github.com/debug-js/debug", "js_program": "JSProgram"}}
+    package = {"metadata": {"secret": 1, "Version": "1.2.3", "sensitive": 1, "ID": "debug", "Name": "Debug"},
+               "data": {"URL": "https://github.com/debug-js/debug", "JSProgram": "JSProgram"}}
 
     headers = {
         "x-authorization": "default_token",
@@ -261,8 +261,8 @@ def test_package_update(client: TestClient):
 
     Update this version of the package.
     """
-    package = {"metadata": {"secret": 1, "version": "1.2.3", "sensitive": 1, "id": "ID", "name": "Name"},
-               "data": {"content": "Content", "js_program": "JSProgram"}}
+    package = {"metadata": {"secret": 1, "Version": "1.2.3", "sensitive": 1, "ID": "ID", "Name": "Name"},
+               "data": {"Content": "Content", "JSProgram": "JSProgram"}}
 
     headers = {
         "x-authorization": "default_token",
@@ -284,7 +284,7 @@ def test_packages_list(client: TestClient):
     Get packages
     """
     package_query = [
-        {"version": "Exact (1.2.3)\nBounded range (1.2.3-2.1.0)\nCarat (^1.2.3)\nTilde (~1.2.0)", "name": "Name"}]
+        {"Version": "Exact (1.2.3)\nBounded range (1.2.3-2.1.0)\nCarat (^1.2.3)\nTilde (~1.2.0)", "Name": "Name"}]
     params = [("offset", '0')]
     headers = {
         "x-authorization": 'default_token',
@@ -365,7 +365,7 @@ def test_user_create(client: TestClient):
 
     Create a new user
     """
-    user = {"name": "Alfalfa", "is_admin": 1, "id": 1, "user_authentication_info": {"password": "password"},
+    user = {"name": "Alfalfa", "isAdmin": 1, "id": 1, "user_authentication_info": {"password": "password"},
             "user_group": {"id": 1, "name": "Admins", "upload": 1, "search": 1, "download": 1, "create_user": 1}}
 
     headers = {

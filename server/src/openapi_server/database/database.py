@@ -121,16 +121,16 @@ class Database:
                     js_program = row["script"]
                 package_versions.append(Package(
                     metadata=PackageMetadata(
-                        name=row["name"],
-                        version=row["version"],
-                        id=row["id"],
+                        Name=row["name"],
+                        Version=row["version"],
+                        ID=row["id"],
                         sensitive=row["sensitive"],
                         secret=row["secret"]
                     ),
                     data=PackageData(
-                        content=row["zip"],
-                        url=row["url"],
-                        js_program=js_program
+                        Content=row["zip"],
+                        URL=row["url"],
+                        JSProgram=js_program
                     )
                 ))
             return package_versions
@@ -151,21 +151,21 @@ class Database:
             return results
 
         elif not len(results):
-            return Error(code=404 , message="Package not found")
+            return Error(code=404, message="Package not found")
 
         if "script" in results[0].keys():
             js_program = results[0]["script"]
         else:
             js_program = ""
 
-        downloaded_package = Package(metadata=PackageMetadata(name=results[0]["name"],
-                                                              version=results[0]["version"],
-                                                              id=results[0]["id"],
+        downloaded_package = Package(metadata=PackageMetadata(Name=results[0]["name"],
+                                                              Version=results[0]["version"],
+                                                              ID=results[0]["id"],
                                                               sensitive=results[0]["sensitive"],
                                                               secret=results[0]["secret"]),
-                                     data=PackageData(content=results[0]["zip"],
-                                                      url=results[0]["url"],
-                                                      js_program=js_program))
+                                     data=PackageData(Content=results[0]["zip"],
+                                                      URL=results[0]["url"],
+                                                      JSProgram=js_program))
 
         return downloaded_package
 
@@ -592,7 +592,7 @@ class Database:
             user = User(
                 id=user_query_row["user_id"],
                 name=user_query_row["username"],
-                is_admin=(user_query_row["user_group_id"] == 1),
+                isAdmin=(user_query_row["user_group_id"] == 1),
                 user_authentication_info=UserAuthenticationInfo(password=user_query_row["hash_pass"]),
                 user_group=user_group
             )
@@ -651,7 +651,7 @@ class Database:
 
         # Generate query
         query = f"""
-                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_gruops
+                    INSERT INTO {os.environ["GOOGLE_CLOUD_PROJECT"]}.{self.dataset.dataset_id}.user_groups
                     (id, name, upload, search, download, create_user)
                     VALUES ({user_group.id}, "{user_group.name}", {user_group.upload}, {user_group.search},
                     {user_group.download}, {user_group.create_user})

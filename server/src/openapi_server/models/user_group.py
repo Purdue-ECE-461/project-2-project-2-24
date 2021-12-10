@@ -25,11 +25,11 @@ class UserGroup(BaseModel):
         id: The id of this UserGroup [Optional].
     """
 
-    name: str = Field(..., alias='Name')
-    upload: bool = Field(..., alias='Upload')
-    search: bool = Field(..., alias='Search')
-    download: bool = Field(..., alias='Download')
-    create_user: bool = Field(..., alias='CreateUser')
-    id: Optional[int] = Field(None, alias='ID')
+    name: str
+    upload: bool
+    search: bool
+    download: bool
+    create_user: bool
+    id: Optional[int] = None
 
 UserGroup.update_forward_refs()

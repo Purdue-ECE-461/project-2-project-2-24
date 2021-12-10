@@ -27,7 +27,7 @@ class PackageMetadata(BaseModel):
     name: str = Field(..., alias='Name')
     version: str = Field(..., alias='Version')
     id: str = Field(..., alias='ID')
-    sensitive: Optional[bool] = Field(None, alias='Sensitive')
-    secret: Optional[bool] = Field(None, alias='Secret')
+    sensitive: Optional[bool] = None
+    secret: Optional[bool] = None
 
 PackageMetadata.update_forward_refs()
